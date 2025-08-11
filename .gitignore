@@ -13,3 +13,30 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# ---- Gradle / Build output ----
+.gradle/
+**/build/
+captures/
+.externalNativeBuild/
+local.properties
+
+# ---- Android Studio ----
+.idea/
+*.iml
+
+# ---- Keystores & secrets ----
+*.jks
+*.keystore
+signing.properties
+*.keystore.properties
+*.pem
+*.ppk
+id_*
+keystore/
+**/keys/
+
+# ---- Logs / OS ----
+*.log
+.DS_Store
+Thumbs.db
