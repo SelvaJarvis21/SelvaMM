@@ -8,8 +8,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.selvamoneymanager.AppDatabase
+import com.example.selvamoneymanager.db.AppDatabase
 import com.example.selvamoneymanager.R
+import com.example.selvamoneymanager.db.Account
+import com.example.selvamoneymanager.db.AccountAdapter
+import com.example.selvamoneymanager.db.AccountDao
 import kotlinx.coroutines.launch
 
 class AccountListActivity : AppCompatActivity() {

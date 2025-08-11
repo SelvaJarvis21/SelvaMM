@@ -12,10 +12,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.selvamoneymanager.AppDatabase
+import com.example.selvamoneymanager.db.AppDatabase
 import com.example.selvamoneymanager.R
 import com.example.selvamoneymanager.trans.CategoryTotal
-import com.example.selvamoneymanager.trans.TransactionDao
+import com.example.selvamoneymanager.db.TransactionDao
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet

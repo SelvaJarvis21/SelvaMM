@@ -2,9 +2,8 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
-    id("kotlin-kapt")
+    id("org.jetbrains.kotlin.kapt")
 }
-
 android {
     namespace = "com.example.selvamoneymanager"
     compileSdk = 34
@@ -20,7 +19,10 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = false
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 
@@ -29,9 +31,6 @@ android {
         viewBinding = true
     }
 
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.10"
-    }
 
     kotlinOptions {
         jvmTarget = "17"
@@ -43,7 +42,6 @@ android {
     }
 }
 
-// ✅ Correct placement of dependencies block
 dependencies {
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
     implementation("androidx.core:core-ktx:1.13.1")
@@ -64,13 +62,16 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
-    // Compose
-    implementation(platform("androidx.compose:compose-bom:2024.05.00"))
+    // ---- Compose ----
+    implementation(platform("androidx.compose:compose-bom:2024.06.00"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
-    implementation("androidx.activity:activity-compose:1.9.0")
+
+    // Compose integrations (required for setContent + viewModel())
+    implementation("androidx.activity:activity-compose:1.9.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.4")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

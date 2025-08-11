@@ -5,8 +5,10 @@ import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.selvamoneymanager.AppDatabase
+import com.example.selvamoneymanager.db.AppDatabase
 import com.example.selvamoneymanager.R
+import com.example.selvamoneymanager.db.Account
+import com.example.selvamoneymanager.db.AccountDao
 import kotlinx.coroutines.launch
 
 class AddAccountActivity : AppCompatActivity() {

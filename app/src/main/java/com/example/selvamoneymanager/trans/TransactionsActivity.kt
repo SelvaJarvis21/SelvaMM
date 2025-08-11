@@ -10,8 +10,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.selvamoneymanager.AppDatabase
+import com.example.selvamoneymanager.db.AppDatabase
 import com.example.selvamoneymanager.R
+import com.example.selvamoneymanager.db.TransactionDao
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat

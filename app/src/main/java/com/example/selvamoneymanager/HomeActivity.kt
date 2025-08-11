@@ -8,17 +8,18 @@ import androidx.appcompat.widget.Toolbar
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.selvamoneymanager.accounts.Account
-import com.example.selvamoneymanager.accounts.AccountAdapter
-import com.example.selvamoneymanager.accounts.AccountDao
 import com.example.selvamoneymanager.accounts.AccountRowItem
 import com.example.selvamoneymanager.accounts.AddAccountActivity
+import com.example.selvamoneymanager.db.Account
+import com.example.selvamoneymanager.db.AccountAdapter
+import com.example.selvamoneymanager.db.AccountDao
+import com.example.selvamoneymanager.db.AppDatabase
+import com.example.selvamoneymanager.more.MoreActivity
 import com.example.selvamoneymanager.stats.StatsActivity
 import com.example.selvamoneymanager.trans.TransactionsActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import kotlinx.coroutines.launch
 import kotlin.math.abs
-
 
 class HomeActivity : AppCompatActivity() {
 
@@ -72,25 +73,22 @@ class HomeActivity : AppCompatActivity() {
 
         bottomNav.setOnItemSelectedListener { item ->
             when (item.itemId) {
-                R.id.nav_accounts -> true // already here
+                R.id.nav_accounts -> {
+                    // Already here
+                    true
+                }
                 R.id.nav_trans -> {
-                    startActivity(Intent(this, TransactionsActivity::class.java).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    })
+                    startActivity(Intent(this, TransactionsActivity::class.java))
                     overridePendingTransition(0, 0)
                     true
                 }
                 R.id.nav_stats -> {
-                    startActivity(Intent(this, StatsActivity::class.java).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    })
+                    startActivity(Intent(this, StatsActivity::class.java))
                     overridePendingTransition(0, 0)
                     true
                 }
                 R.id.nav_more -> {
-                    startActivity(Intent(this, MoreActivity::class.java).apply {
-                        addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    })
+                    startActivity(Intent(this, MoreActivity::class.java))
                     overridePendingTransition(0, 0)
                     true
                 }
@@ -145,6 +143,7 @@ class HomeActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        bottomNav.selectedItemId = R.id.nav_accounts
         loadAndRender()
     }
 }

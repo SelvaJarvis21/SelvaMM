@@ -28,10 +28,11 @@
         <activity
             android:name=".accounts.AddAccountActivity"
             android:exported="false" />
-
         <activity android:name=".trans.TransactionsActivity" />
         <activity android:name=".trans.AddTransactionActivity" />
         <activity android:name=".stats.StatsActivity" />
+        <activity android:name=".more.MoreActivity" android:exported="false" />
+        <activity android:name=".more.CategoryListActivity" android:exported="false" />
     </application>
 
 </manifest>
