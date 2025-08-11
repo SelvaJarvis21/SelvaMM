@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="#1E1E1E">
+
+    <TextView
+        android:id="@+id/tvAccountName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Account Name"
+        android:textColor="#FFFFFF"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/tvAmount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="$ 0.00"
+        android:textSize="14sp"
+        android:textColor="#00BCD4" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        android:id="@+id/layoutCardDetails">
+
+        <TextView
+            android:id="@+id/tvBalancePayable"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Balance Payable: $0.00"
+            android:textColor="#F44336"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tvOutstandingBalance"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Outstanding: $0.00"
+            android:textColor="#F44336"
+            android:textSize="12sp" />
+    </LinearLayout>
+</LinearLayout>

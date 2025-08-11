@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent" android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <!-- Period header -->
+        <LinearLayout
+            android:id="@+id/periodBar"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:padding="12dp" android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnPrev"
+                android:layout_width="40dp" android:layout_height="40dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="Previous"
+                android:src="@android:drawable/ic_media_previous" />
+
+            <TextView
+                android:id="@+id/tvPeriodTitle"
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Aug 2025" android:textSize="18sp" android:textStyle="bold" />
+
+            <ImageButton
+                android:id="@+id/btnNext"
+                android:layout_width="40dp" android:layout_height="40dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="Next"
+                android:src="@android:drawable/ic_media_next" />
+        </LinearLayout>
+
+        <!-- Mode toggle -->
+        <RadioGroup
+            android:id="@+id/modeToggle"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:orientation="horizontal" android:gravity="center"
+            android:paddingHorizontal="8dp">
+
+            <RadioButton
+                android:id="@+id/rbDay"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Day view" android:checked="true"/>
+
+            <RadioButton
+                android:id="@+id/rbMonth"
+                android:layout_width="wrap_content" android:layout_height="wrap_content"
+                android:text="Month view" android:layout_marginStart="16dp"/>
+        </RadioGroup>
+
+        <!-- List -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerTxns"
+            android:layout_width="match_parent" android:layout_height="0dp"
+            android:layout_weight="1" android:padding="12dp"/>
+    </LinearLayout>
+
+    <!-- Add Transaction -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddTxn"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end" android:layout_margin="16dp"
+        app:srcCompat="@android:drawable/ic_input_add"
+        android:contentDescription="Add Transaction"/>
+</FrameLayout>
