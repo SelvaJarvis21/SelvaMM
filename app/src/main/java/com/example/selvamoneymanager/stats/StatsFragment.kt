@@ -1,32 +1,41 @@
 package com.example.selvamoneymanager.stats
 
 import android.animation.ValueAnimator
-import android.view.animation.DecelerateInterpolator
+import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
-import android.widget.ImageButton
-import android.widget.TextView
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
 import android.widget.AutoCompleteTextView
 import android.widget.ArrayAdapter
-import androidx.appcompat.app.AppCompatActivity
+import android.widget.ImageButton
+import android.widget.TextView
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.selvamoneymanager.db.AppDatabase
 import com.example.selvamoneymanager.R
-import com.example.selvamoneymanager.trans.CategoryTotal
+import com.example.selvamoneymanager.db.AppDatabase
 import com.example.selvamoneymanager.db.TransactionDao
+import com.example.selvamoneymanager.trans.CategoryTotal
 import com.github.mikephil.charting.charts.PieChart
+import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.PieData
 import com.github.mikephil.charting.data.PieDataSet
 import com.github.mikephil.charting.data.PieEntry
+import com.github.mikephil.charting.formatter.PercentFormatter
+import com.github.mikephil.charting.highlight.Highlight
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.google.android.material.chip.Chip
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
+import kotlin.math.abs
 
-class StatsActivity : AppCompatActivity() {
+class StatsFragment : Fragment() {
 
     private lateinit var txnDao: TransactionDao
 
@@ -40,83 +49,61 @@ class StatsActivity : AppCompatActivity() {
     private lateinit var catAdapter: CategoryTotalsAdapter
     private lateinit var ddTimeline: AutoCompleteTextView
     private lateinit var tvSelectedCategory: TextView
-    private var lastRows: List<CategoryTotal> = emptyList()
-    private var lastSelectedAmt: Double = 0.0
-
-
-
 
     // State
     private val cal = Calendar.getInstance()
-    private var isYearly: Boolean = false // false = Monthly (default), true = Yearly
+    private var isYearly: Boolean = false
+    private var lastRows: List<CategoryTotal> = emptyList()
+    private var lastSelectedAmt: Double = 0.0
 
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? = inflater.inflate(R.layout.fragment_stats, container, false)
 
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_stats)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        // DB
-        txnDao = AppDatabase.getDatabase(this).transactionDao()
+        txnDao = AppDatabase.getDatabase(requireContext()).transactionDao()
 
+        ddTimeline = view.findViewById(R.id.ddTimeline)
+        pieChart = view.findViewById(R.id.pieChart)
+        tvPeriod = view.findViewById(R.id.tvPeriod)
+        chipIncome = view.findViewById(R.id.chipIncome)
+        chipExpense = view.findViewById(R.id.chipExpense)
+        tvTotalSummary = view.findViewById(R.id.tvTotalSummary)
+        rvCategoryTotals = view.findViewById(R.id.rvCategoryTotals)
+        tvSelectedCategory = view.findViewById(R.id.tvSelectedCategory)
 
-        // Views
-        ddTimeline = findViewById(R.id.ddTimeline)
-        pieChart = findViewById(R.id.pieChart)
-        tvPeriod = findViewById(R.id.tvPeriod)
-        chipIncome = findViewById(R.id.chipIncome)
-        chipExpense = findViewById(R.id.chipExpense)
-        tvTotalSummary = findViewById(R.id.tvTotalSummary)
-        rvCategoryTotals = findViewById(R.id.rvCategoryTotals)
-        rvCategoryTotals.layoutManager = LinearLayoutManager(this)
-        catAdapter = CategoryTotalsAdapter()
+        rvCategoryTotals.layoutManager = LinearLayoutManager(requireContext())
+        catAdapter = CategoryTotalsAdapter(onItemClick = { name -> highlightCategory(name) })
         rvCategoryTotals.adapter = catAdapter
-        tvSelectedCategory = findViewById(R.id.tvSelectedCategory)
-
-        // pie highlighter - on click
-
-        catAdapter = CategoryTotalsAdapter(onItemClick = { name ->
-            // find the slice index and highlight it
-            val data = pieChart.data ?: return@CategoryTotalsAdapter
-            val entries = (data.dataSet as com.github.mikephil.charting.data.PieDataSet).values
-            val idx = entries.indexOfFirst { (it as com.github.mikephil.charting.data.PieEntry).label == name }
-            if (idx >= 0) {
-                pieChart.highlightValue(idx.toFloat(), 0)
-                // also update the selected text using same logic:
-                val sum = lastRows.sumOf { kotlin.math.abs(it.total) }
-                val amt = kotlin.math.abs(lastRows.find { (it.category ?: "Uncategorized") == name }?.total ?: 0.0)
-                val pct = if (sum > 0) (amt / sum) * 100.0 else 0.0
-                tvSelectedCategory.text = "%.1f%%  •  %s  •  ₹%.2f".format(java.util.Locale.getDefault(), pct, name, amt)
-                catAdapter.setSelectedCategory(name)
-            }
-        })
-        rvCategoryTotals.adapter = catAdapter
-        // 3) SETUP CHART (legend off, selection listener, etc.)
 
         setupChart()
 
         // Timeline dropdown
         val modes = listOf("Monthly", "Yearly")
-        ddTimeline.setAdapter(ArrayAdapter(this, android.R.layout.simple_list_item_1, modes))
+        ddTimeline.setAdapter(ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, modes))
         ddTimeline.setText("Monthly", false)
         ddTimeline.setOnItemClickListener { _, _, position, _ ->
-            isYearly = (position == 1) // 0=Monthly, 1=Yearly
+            isYearly = (position == 1)
             updateHeader()
             loadAndRender()
         }
 
-        // Prev/Next
-        findViewById<ImageButton>(R.id.btnPrev).setOnClickListener {
+        // Prev/Next buttons
+        view.findViewById<ImageButton>(R.id.btnPrev).setOnClickListener {
             if (isYearly) cal.add(Calendar.YEAR, -1) else cal.add(Calendar.MONTH, -1)
             updateHeader()
             loadAndRender()
         }
-        findViewById<ImageButton>(R.id.btnNext).setOnClickListener {
+        view.findViewById<ImageButton>(R.id.btnNext).setOnClickListener {
             if (isYearly) cal.add(Calendar.YEAR, 1) else cal.add(Calendar.MONTH, 1)
             updateHeader()
             loadAndRender()
         }
 
-        // Income / Expense toggle (mutually exclusive)
+        // Income / Expense toggle
         chipIncome.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) {
                 chipExpense.isChecked = false
@@ -134,9 +121,7 @@ class StatsActivity : AppCompatActivity() {
             }
         }
 
-        // Initial state
         chipExpense.isChecked = true
-
         updateHeader()
         loadAndRender()
     }
@@ -152,14 +137,12 @@ class StatsActivity : AppCompatActivity() {
     private fun periodBounds(c: Calendar): Pair<Long, Long> {
         return if (isYearly) {
             val start = (c.clone() as Calendar).apply {
-                set(Calendar.MONTH, Calendar.JANUARY)
-                set(Calendar.DAY_OF_MONTH, 1)
+                set(Calendar.MONTH, Calendar.JANUARY); set(Calendar.DAY_OF_MONTH, 1)
                 set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)
                 set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
             }.timeInMillis
             val end = (c.clone() as Calendar).apply {
-                set(Calendar.MONTH, Calendar.DECEMBER)
-                set(Calendar.DAY_OF_MONTH, 31)
+                set(Calendar.MONTH, Calendar.DECEMBER); set(Calendar.DAY_OF_MONTH, 31)
                 set(Calendar.HOUR_OF_DAY, 23); set(Calendar.MINUTE, 59)
                 set(Calendar.SECOND, 59); set(Calendar.MILLISECOND, 999)
             }.timeInMillis
@@ -187,33 +170,30 @@ class StatsActivity : AppCompatActivity() {
         pieChart.setNoDataText("No records")
         pieChart.centerText = ""
         pieChart.setEntryLabelTextSize(12f)
+        pieChart.legend.isEnabled = false
 
-        val legend = pieChart.legend
-        legend.isEnabled = false
-
-        // 🔗 sync pie selection with list
-        pieChart.setOnChartValueSelectedListener(object : com.github.mikephil.charting.listener.OnChartValueSelectedListener {
-            override fun onValueSelected(e: com.github.mikephil.charting.data.Entry?, h: com.github.mikephil.charting.highlight.Highlight?) {
-                val pe = e as? com.github.mikephil.charting.data.PieEntry ?: return
+        pieChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
+            override fun onValueSelected(e: Entry?, h: Highlight?) {
+                val pe = e as? PieEntry ?: return
                 val cat = pe.label ?: "Uncategorized"
-                val sum = lastRows.sumOf { kotlin.math.abs(it.total) }
-                val amt = kotlin.math.abs(lastRows.find { (it.category ?: "Uncategorized") == cat }?.total ?: 0.0)
+                val sum = lastRows.sumOf { abs(it.total) }
+                val amt = abs(lastRows.find { (it.category ?: "Uncategorized") == cat }?.total ?: 0.0)
                 val pct = if (sum > 0) (amt / sum) * 100.0 else 0.0
                 showSelectedCategoryAnimated(cat, pct, amt)
-                tvSelectedCategory.text = "%.1f%%  •  %s  •  ₹%.2f".format(java.util.Locale.getDefault(), pct, cat, amt)
+                tvSelectedCategory.text = "%.1f%%  •  %s  •  ₹%.2f".format(Locale.getDefault(), pct, cat, amt)
                 val center = "${if (chipIncome.isChecked) "Earned" else "Spent"}\n₹%.2f".format(amt)
                 pieChart.crossfadeCenterText(center)
 
-                // highlight in the list & scroll to it
                 catAdapter.setSelectedCategory(cat)
                 val pos = catAdapter.indexOfCategory(cat)
-                if (pos >= 0) rvCategoryTotals.smoothScrollToPosition(pos)
+                if (pos >= 0) rvCategoryTotals.smoothScrollToPosition(pos)   // <-- FIXED
             }
+
             override fun onNothingSelected() {
                 tvSelectedCategory.crossfadeTo("")
                 catAdapter.setSelectedCategory(null)
                 lastSelectedAmt = 0.0
-                val totals = lastRows.sumOf { kotlin.math.abs(it.total) }
+                val totals = lastRows.sumOf { abs(it.total) }
                 val center = "${if (chipIncome.isChecked) "Earned" else "Spent"}\n₹%.2f".format(totals)
                 pieChart.crossfadeCenterText(center)
             }
@@ -221,7 +201,7 @@ class StatsActivity : AppCompatActivity() {
     }
 
     private fun loadAndRender() {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             val (start, end) = periodBounds(cal)
             val type = if (chipIncome.isChecked) "INCOME" else "EXPENSE"
             val rows: List<CategoryTotal> = txnDao.getCategoryTotalsInRange(type, start, end)
@@ -231,7 +211,8 @@ class StatsActivity : AppCompatActivity() {
 
     private fun renderPie(rows: List<CategoryTotal>, type: String) {
         lastRows = rows
-        tvSelectedCategory.text = ""  // reset selection text
+        tvSelectedCategory.text = ""
+
         if (rows.isEmpty()) {
             tvTotalSummary.text = "No records"
             pieChart.centerText = "No records"
@@ -252,11 +233,11 @@ class StatsActivity : AppCompatActivity() {
             sliceSpace = 1f
             valueTextSize = 12f
             setDrawValues(true)
-            valueTextColor = android.graphics.Color.WHITE
+            valueTextColor = Color.WHITE
             this.colors = colors
         }
         val data = PieData(dataSet).apply {
-            setValueFormatter(com.github.mikephil.charting.formatter.PercentFormatter(pieChart))
+            setValueFormatter(PercentFormatter(pieChart))
         }
 
         pieChart.data = data
@@ -265,7 +246,6 @@ class StatsActivity : AppCompatActivity() {
         pieChart.invalidate()
         pieChart.animateY(600)
 
-        // list under the chart
         catAdapter.setData(rows)
     }
 
@@ -273,14 +253,13 @@ class StatsActivity : AppCompatActivity() {
         "#F44336", "#FF9800", "#FFEB3B", "#4CAF50", "#00BCD4",
         "#2196F3", "#9C27B0", "#795548", "#607D8B", "#8BC34A",
         "#E91E63", "#3F51B5"
-    ).map { android.graphics.Color.parseColor(it) }
+    ).map { Color.parseColor(it) }
 
     private fun colorForCategory(name: String): Int {
         val key = name.lowercase(Locale.getDefault())
         val idx = (key.hashCode() and 0x7fffffff) % palette.size
         return palette[idx]
     }
-
 
     private fun TextView.crossfadeTo(textNew: String, duration: Long = 180) {
         if (this.text == textNew) return
@@ -302,26 +281,18 @@ class StatsActivity : AppCompatActivity() {
     }
 
     private fun showSelectedCategoryAnimated(name: String, pct: Double, amt: Double) {
-        // Left part (percent + name) crossfades
-        val left = "%.1f%%  •  %s".format(java.util.Locale.getDefault(), pct, name)
+        val left = "%.1f%%  •  %s".format(Locale.getDefault(), pct, name)
         tvSelectedCategory.crossfadeTo(left)
 
-        // Right part (amount) counts up. If you prefer a single TextView, just compose it all there.
-        // Here we’ll keep it simple and animate the amount inside the same TextView:
-        // Compose while animating so it feels like the number is changing.
         val start = lastSelectedAmt
         animateAmount(start, amt) { animatedAmount ->
             tvSelectedCategory.text = "$left  •  $animatedAmount"
         }
         lastSelectedAmt = amt
     }
-    private fun PieChart.crossfadeCenterText(
-        newText: String,
-        fadeDuration: Long = 150L
-    ) {
-        // Avoid flicker if text is unchanged
-        if (this.centerText == newText) return
 
+    private fun PieChart.crossfadeCenterText(newText: String, fadeDuration: Long = 150L) {
+        if (this.centerText == newText) return
         this.animate().alpha(0f).setDuration(fadeDuration).withEndAction {
             this.centerText = newText
             this.invalidate()
@@ -329,4 +300,17 @@ class StatsActivity : AppCompatActivity() {
         }.start()
     }
 
+    private fun highlightCategory(name: String) {
+        val data = pieChart.data ?: return
+        val entries = (data.dataSet as PieDataSet).values
+        val idx = entries.indexOfFirst { (it as PieEntry).label == name }
+        if (idx >= 0) {
+            pieChart.highlightValue(idx.toFloat(), 0)
+            val sum = lastRows.sumOf { abs(it.total) }
+            val amt = abs(lastRows.find { (it.category ?: "Uncategorized") == name }?.total ?: 0.0)
+            val pct = if (sum > 0) (amt / sum) * 100.0 else 0.0
+            tvSelectedCategory.text = "%.1f%%  •  %s  •  ₹%.2f".format(Locale.getDefault(), pct, name, amt)
+            catAdapter.setSelectedCategory(name)
+        }
+    }
 }

@@ -10,7 +10,7 @@ import com.example.selvamoneymanager.db.Account
 interface AccountDao {
 
     @Insert
-    suspend fun insertAccount(account: Account)
+    suspend fun insert(account: Account)
     @Query("SELECT * FROM accounts")
 
     suspend fun getAllAccounts(): List<Account>

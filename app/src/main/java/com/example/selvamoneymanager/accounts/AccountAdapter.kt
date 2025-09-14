@@ -1,4 +1,4 @@
-package com.example.selvamoneymanager.db
+package com.example.selvamoneymanager.accounts
 
 import android.view.LayoutInflater
 import android.view.View
@@ -7,7 +7,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.selvamoneymanager.R
 import com.example.selvamoneymanager.db.Account
-import com.example.selvamoneymanager.accounts.AccountRowItem
 
 class AccountAdapter(
     private val items: List<AccountRowItem>,

@@ -1,28 +1,25 @@
 package com.example.selvamoneymanager.trans
 
 import android.app.DatePickerDialog
-import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.*
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.example.selvamoneymanager.R
-import com.example.selvamoneymanager.accounts.AddAccountActivity
 import com.example.selvamoneymanager.db.*
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import kotlin.math.abs
 
-class AddTransactionActivity : AppCompatActivity() {
+class AddTransactionFragment : Fragment() {
 
-    // DAOs
     private lateinit var txnDao: TransactionDao
     private lateinit var accDao: AccountDao
     private lateinit var categoryDao: CategoryDao
 
-    // UI
     private lateinit var rbIncome: RadioButton
     private lateinit var rbExpense: RadioButton
     private lateinit var rbTransfer: RadioButton
@@ -38,42 +35,44 @@ class AddTransactionActivity : AppCompatActivity() {
     private lateinit var etAmount: EditText
     private lateinit var btnSave: Button
 
-    // Data
     private var selectedDateMillis: Long = System.currentTimeMillis()
     private var accounts: List<Account> = emptyList()
     private var categories: List<CategoryEntity> = emptyList()
 
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return inflater.inflate(R.layout.fragment_add_transaction, container, false)
+    }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_add_transaction)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        // DAOs
-        val db = AppDatabase.getDatabase(this)
+        val db = AppDatabase.getDatabase(requireContext())
         txnDao = db.transactionDao()
         accDao = db.accountDao()
         categoryDao = db.categoryDao()
 
-        // Bind views
-        etDate = findViewById(R.id.etDate)
-        spAccount = findViewById(R.id.spAccount)
-        spCategory = findViewById(R.id.spCategory)
-        etDesc = findViewById(R.id.etDescription)
-        etAmount = findViewById(R.id.etAmount)
-        btnSave = findViewById(R.id.btnSaveTxn)
-        rgType = findViewById(R.id.rgType)
-        rbIncome = findViewById(R.id.rbIncome)
-        rbExpense = findViewById(R.id.rbExpense)
-        rbTransfer = findViewById(R.id.rbTransfer)
-        layoutIE = findViewById(R.id.layoutIE)
-        layoutTransfer = findViewById(R.id.layoutTransfer)
-        spFrom = findViewById(R.id.spFrom)
-        spTo = findViewById(R.id.spTo)
+        etDate = view.findViewById(R.id.etDate)
+        spAccount = view.findViewById(R.id.spAccount)
+        spCategory = view.findViewById(R.id.spCategory)
+        etDesc = view.findViewById(R.id.etDescription)
+        etAmount = view.findViewById(R.id.etAmount)
+        btnSave = view.findViewById(R.id.btnSaveTxn)
+        rgType = view.findViewById(R.id.rgType)
+        rbIncome = view.findViewById(R.id.rbIncome)
+        rbExpense = view.findViewById(R.id.rbExpense)
+        rbTransfer = view.findViewById(R.id.rbTransfer)
+        layoutIE = view.findViewById(R.id.layoutIE)
+        layoutTransfer = view.findViewById(R.id.layoutTransfer)
+        spFrom = view.findViewById(R.id.spFrom)
+        spTo = view.findViewById(R.id.spTo)
 
-        // Initial categories based on current radio
+        // Set initial categories
         currentType()?.let { loadCategories(it) }
 
-        // Toggle UI
+        // Toggle UI based on type
         fun applyTypeUI() {
             if (rbTransfer.isChecked) {
                 layoutIE.visibility = View.GONE
@@ -99,7 +98,8 @@ class AddTransactionActivity : AppCompatActivity() {
         etDate.setOnClickListener {
             val c = Calendar.getInstance().apply { timeInMillis = selectedDateMillis }
             DatePickerDialog(
-                this, { _, y, m, d ->
+                requireContext(),
+                { _, y, m, d ->
                     val cal = Calendar.getInstance().apply {
                         set(y, m, d, 0, 0, 0); set(Calendar.MILLISECOND, 0)
                     }
@@ -113,23 +113,16 @@ class AddTransactionActivity : AppCompatActivity() {
         }
 
         // Load accounts
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             accounts = accDao.getAllAccounts()
             if (accounts.isEmpty()) {
-                AlertDialog.Builder(this@AddTransactionActivity)
-                    .setTitle("No Accounts")
-                    .setMessage("You need to add an account before creating a transaction.")
-                    .setPositiveButton("Add Account") { _, _ ->
-                        startActivity(Intent(this@AddTransactionActivity, AddAccountActivity::class.java))
-                        finish()
-                    }
-                    .setNegativeButton("Cancel", null)
-                    .show()
+                Toast.makeText(requireContext(), "No accounts. Add one first!", Toast.LENGTH_SHORT).show()
+                parentFragmentManager.popBackStack()
                 return@launch
             } else {
                 val names = accounts.map { it.name }
                 val spinnerAdapter = ArrayAdapter(
-                    this@AddTransactionActivity,
+                    requireContext(),
                     android.R.layout.simple_spinner_item,
                     names
                 ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
@@ -139,19 +132,16 @@ class AddTransactionActivity : AppCompatActivity() {
             }
         }
 
-
-
-        // Type change -> reload categories for that enum
+        // Reload categories when type changes
         rgType.setOnCheckedChangeListener { _, checkedId ->
             applyTypeUI()
             when (checkedId) {
                 R.id.rbIncome -> loadCategories(CategoryType.INCOME)
                 R.id.rbExpense -> loadCategories(CategoryType.EXPENSE)
-                else -> { /* transfer: no categories */ }
             }
         }
 
-        // Save
+        // Save transaction
         btnSave.setOnClickListener {
             val desc = etDesc.text.toString().trim()
             val amount = etAmount.text.toString().toDoubleOrNull() ?: 0.0
@@ -162,13 +152,13 @@ class AddTransactionActivity : AppCompatActivity() {
                 else -> "EXPENSE"
             }
 
-            lifecycleScope.launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 val txn = when (txnTypeStr) {
                     "TRANSFER" -> {
                         val fromAcc = accounts.getOrNull(spFrom.selectedItemPosition)
                         val toAcc = accounts.getOrNull(spTo.selectedItemPosition)
                         if (fromAcc == null || toAcc == null || fromAcc.id == toAcc.id) {
-                            Toast.makeText(this@AddTransactionActivity, "Choose different From/To accounts", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Choose different From/To accounts", Toast.LENGTH_SHORT).show()
                             return@launch
                         }
                         Transaction(
@@ -177,7 +167,7 @@ class AddTransactionActivity : AppCompatActivity() {
                             accountId = null,
                             categoryId = null,
                             description = desc,
-                            amount = amount, // neutral
+                            amount = amount,
                             fromAccountId = fromAcc.id,
                             toAccountId = toAcc.id
                         )
@@ -185,7 +175,7 @@ class AddTransactionActivity : AppCompatActivity() {
                     else -> {
                         val account = accounts.getOrNull(spAccount.selectedItemPosition)
                         if (account == null) {
-                            Toast.makeText(this@AddTransactionActivity, "Select an account", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(requireContext(), "Select an account", Toast.LENGTH_SHORT).show()
                             return@launch
                         }
                         val selectedCat = categories.getOrNull(spCategory.selectedItemPosition)
@@ -204,28 +194,24 @@ class AddTransactionActivity : AppCompatActivity() {
                     }
                 }
                 txnDao.insert(txn)
-                finish()
+                Toast.makeText(requireContext(), "Transaction added!", Toast.LENGTH_SHORT).show()
+                parentFragmentManager.popBackStack()
             }
         }
     }
 
-    // ---------- Helpers ----------
-
     private fun currentType(): CategoryType? = when {
         rbIncome.isChecked -> CategoryType.INCOME
         rbExpense.isChecked -> CategoryType.EXPENSE
-        else -> null // transfer: no category list
+        else -> null
     }
 
-
-
-
     private fun loadCategories(type: CategoryType) {
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             categories = categoryDao.categoriesByType(type)
             val names = categories.map { it.name }
             val adapter = ArrayAdapter(
-                this@AddTransactionActivity,
+                requireContext(),
                 android.R.layout.simple_spinner_item,
                 names
             ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }

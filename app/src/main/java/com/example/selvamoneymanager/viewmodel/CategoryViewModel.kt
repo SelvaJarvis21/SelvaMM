@@ -1,4 +1,4 @@
-package com.example.selvamoneymanager.more
+package com.example.selvamoneymanager.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

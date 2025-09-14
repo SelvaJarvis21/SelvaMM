@@ -14,116 +14,12 @@
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         android:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-    <!-- Summary row -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="12dp">
-
-        <LinearLayout
-            android:id="@+id/cardTotalAccounts"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:padding="12dp"
-            android:orientation="vertical"
-            android:background="#1F1F1F">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Accounts"
-                android:textColor="#AAAAAA"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/tvTotalAccounts"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="₹0.00"
-                android:textColor="#FFFFFF"
-                android:textStyle="bold"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/cardLiabilities"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
-            android:padding="12dp"
-            android:orientation="vertical"
-            android:background="#1F1F1F">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Liabilities"
-                android:textColor="#AAAAAA"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/tvTotalLiabilities"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="₹0.00"
-                android:textColor="#F44336"
-                android:textStyle="bold"
-                android:textSize="18sp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/cardNetWorth"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:padding="12dp"
-            android:orientation="vertical"
-            android:background="#1F1F1F">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Net Worth"
-                android:textColor="#AAAAAA"
-                android:textSize="12sp" />
-
-            <TextView
-                android:id="@+id/tvNetWorth"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="₹0.00"
-                android:textColor="#00BCD4"
-                android:textStyle="bold"
-                android:textSize="18sp" />
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- Accounts list + FAB -->
+    <!-- Fragment container (this is where Transactions, Stats, More will load) -->
     <FrameLayout
+        android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerAccounts"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:padding="12dp" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/fabAddAccount"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="16dp"
-            android:layout_marginBottom="72dp"
-            android:contentDescription="Add Account"
-            app:srcCompat="@android:drawable/ic_input_add" />
-    </FrameLayout>
+        android:layout_weight="1" />
 
     <!-- Bottom navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView

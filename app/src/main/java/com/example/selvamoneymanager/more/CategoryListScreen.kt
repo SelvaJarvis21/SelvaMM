@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.example.selvamoneymanager.db.CategoryEntity
 import com.example.selvamoneymanager.db.CategoryType
+import com.example.selvamoneymanager.viewmodel.CategoryViewModel
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
