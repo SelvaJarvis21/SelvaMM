@@ -1,32 +1,29 @@
 package com.example.selvamoneymanager.db
 
-import androidx.room.Dao
-import androidx.room.Embedded
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Relation
+import androidx.room.*
 import com.example.selvamoneymanager.trans.CategoryTotal
 import com.example.selvamoneymanager.trans.TransactionRow
-
-data class TxWithCategory(
-    @Embedded val tx: Transaction,
-    @Relation(
-        parentColumn = "categoryId",
-        entityColumn = "id"
-    )
-    val category: CategoryEntity?
-)
 
 @Dao
 interface TransactionDao {
 
-    @Insert
-    suspend fun insert(txn: Transaction)
+    // Insert transaction, return ID
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insert(txn: Transaction): Long
 
+    // Update transaction
+    @Update
+    suspend fun update(txn: Transaction)
+
+    // Delete transaction
+    @Delete
+    suspend fun delete(txn: Transaction)
+
+    // Get all rows within a date range (with joins)
     @Query("""
         SELECT 
           t.id, t.type, t.dateMillis, t.amount, 
-          cat.name AS category,        -- now coming from CategoryEntity
+          cat.name AS category,
           t.description,
           t.accountId, acc.name AS accountName,
           t.fromAccountId, accFrom.name AS fromAccountName,
@@ -39,12 +36,16 @@ interface TransactionDao {
         WHERE t.dateMillis BETWEEN :startMillis AND :endMillis
         ORDER BY t.dateMillis DESC, t.id DESC
     """)
-    suspend fun getRowsInRange(startMillis: Long, endMillis: Long): List<TransactionRow>
+    suspend fun getRowsInRange(
+        startMillis: Long,
+        endMillis: Long
+    ): List<TransactionRow>
 
+    // Get all rows (latest first)
     @Query("""
         SELECT 
           t.id, t.type, t.dateMillis, t.amount, 
-          cat.name AS category,        -- from CategoryEntity
+          cat.name AS category,
           t.description,
           t.accountId, acc.name AS accountName,
           t.fromAccountId, accFrom.name AS fromAccountName,
@@ -58,6 +59,7 @@ interface TransactionDao {
     """)
     suspend fun getAllRows(): List<TransactionRow>
 
+    // Get totals grouped by category
     @Query("""
         SELECT 
           COALESCE(cat.name, 'Uncategorized') AS category,
@@ -71,7 +73,7 @@ interface TransactionDao {
         ORDER BY total DESC
     """)
     suspend fun getCategoryTotalsInRange(
-        type: String,           // "INCOME" or "EXPENSE"
+        type: TransactionType,   // enum, thanks to TypeConverter
         startMillis: Long,
         endMillis: Long
     ): List<CategoryTotal>

@@ -9,11 +9,12 @@ import androidx.room.PrimaryKey
     indices = [Index(value = ["name", "type"], unique = true)]
 )
 data class CategoryEntity(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,  // Int to match Transaction.categoryId
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,                  // Int to match Transaction.categoryId
     val name: String,
-    val type: CategoryType,          // INCOME or EXPENSE
-    val color: Long? = null,         // optional: ARGB
-    val isDefault: Boolean = false
+    val type: CategoryType,           // INCOME or EXPENSE
+    val color: Long? = null,          // Optional: ARGB
+    val isDefault: Boolean = false    // Seed vs user-created
 )
 
 enum class CategoryType { INCOME, EXPENSE }

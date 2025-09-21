@@ -27,7 +27,7 @@ import androidx.room.PrimaryKey
             onDelete = ForeignKey.CASCADE
         ),
         ForeignKey(
-            entity = CategoryEntity::class, // NEW: link to category table
+            entity = CategoryEntity::class,
             parentColumns = ["id"],
             childColumns = ["categoryId"],
             onDelete = ForeignKey.SET_NULL
@@ -37,19 +37,24 @@ import androidx.room.PrimaryKey
         Index(value = ["accountId"]),
         Index(value = ["fromAccountId"]),
         Index(value = ["toAccountId"]),
-        Index(value = ["categoryId"]) // NEW: index for category
+        Index(value = ["categoryId"])
     ]
 )
 data class Transaction(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val type: String,                // "INCOME", "EXPENSE", "TRANSFER"
+
+    val type: TransactionType,       // INCOME, EXPENSE, TRANSFER
     val dateMillis: Long,
-    val accountId: Int?,              // For income/expense
-    val categoryId: Int?,              // NEW: links to CategoryEntity
-    val description: String,
+
+    val accountId: Int?,             // For income/expense
+    val categoryId: Int?,            // Link to CategoryEntity
+
+    val description: String = "",    // Default = empty
     val amount: Double,
 
     // For transfers
-    val fromAccountId: Int?,
-    val toAccountId: Int?
+    val fromAccountId: Int? = null,
+    val toAccountId: Int? = null
 )
+
+enum class TransactionType { INCOME, EXPENSE, TRANSFER }

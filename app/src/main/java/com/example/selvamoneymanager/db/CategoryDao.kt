@@ -1,27 +1,31 @@
 package com.example.selvamoneymanager.db
 
-import androidx.room.Dao
-import androidx.room.Delete
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 
 @Dao
 interface CategoryDao {
 
-    @Query("SELECT * FROM categories WHERE type = :type ORDER BY name")
-    suspend fun categoriesByType(type: CategoryType): List<CategoryEntity>  // List, not Flow
+    // Get categories filtered by type (Income / Expense)
+    @Query("SELECT * FROM categories WHERE type = :type ORDER BY name ASC")
+    suspend fun getCategoriesByType(type: CategoryType): List<CategoryEntity>
 
-    @Insert(onConflict = OnConflictStrategy.ABORT)
+    // Get all categories
+    @Query("SELECT * FROM categories ORDER BY type, name ASC")
+    suspend fun getAllCategories(): List<CategoryEntity>
+
+    // Insert category (replace to avoid crash on duplicate)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(category: CategoryEntity): Long
 
+    // Update existing category
     @Update
     suspend fun update(category: CategoryEntity)
 
+    // Delete category
     @Delete
     suspend fun delete(category: CategoryEntity)
 
+    // Count all categories
     @Query("SELECT COUNT(*) FROM categories")
     suspend fun count(): Int
 }

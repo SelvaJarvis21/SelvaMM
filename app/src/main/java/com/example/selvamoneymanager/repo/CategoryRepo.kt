@@ -5,7 +5,7 @@ import com.example.selvamoneymanager.db.CategoryEntity
 import com.example.selvamoneymanager.db.CategoryType
 
 class CategoryRepo(private val dao: CategoryDao) {
-    suspend fun list(type: CategoryType): List<CategoryEntity> = dao.categoriesByType(type)
+    suspend fun list(type: CategoryType): List<CategoryEntity> = dao.getCategoriesByType(type)
     suspend fun add(name: String, type: CategoryType) =
         dao.insert(CategoryEntity(name = name.trim(), type = type))
 

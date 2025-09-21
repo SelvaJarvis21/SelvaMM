@@ -162,7 +162,7 @@ class AddTransactionFragment : Fragment() {
                             return@launch
                         }
                         Transaction(
-                            type = "TRANSFER",
+                            type = TransactionType.TRANSFER,   // ✅ use enum
                             dateMillis = selectedDateMillis,
                             accountId = null,
                             categoryId = null,
@@ -182,7 +182,7 @@ class AddTransactionFragment : Fragment() {
                         val categoryId = selectedCat?.id
                         val signedAmount = if (txnTypeStr == "EXPENSE") -abs(amount) else abs(amount)
                         Transaction(
-                            type = txnTypeStr,
+                            type = if (txnTypeStr == "EXPENSE") TransactionType.EXPENSE else TransactionType.INCOME, // ✅ use enum
                             dateMillis = selectedDateMillis,
                             amount = signedAmount,
                             categoryId = categoryId,
@@ -193,6 +193,7 @@ class AddTransactionFragment : Fragment() {
                         )
                     }
                 }
+
                 txnDao.insert(txn)
                 Toast.makeText(requireContext(), "Transaction added!", Toast.LENGTH_SHORT).show()
                 parentFragmentManager.popBackStack()
@@ -208,7 +209,7 @@ class AddTransactionFragment : Fragment() {
 
     private fun loadCategories(type: CategoryType) {
         viewLifecycleOwner.lifecycleScope.launch {
-            categories = categoryDao.categoriesByType(type)
+            categories = categoryDao.getCategoriesByType(type)
             val names = categories.map { it.name }
             val adapter = ArrayAdapter(
                 requireContext(),

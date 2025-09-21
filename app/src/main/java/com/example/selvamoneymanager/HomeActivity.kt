@@ -2,6 +2,7 @@ package com.example.selvamoneymanager
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -32,29 +33,34 @@ class HomeActivity : AppCompatActivity() {
 
         val bottomNav = findViewById<BottomNavigationView>(R.id.bottomNav)
 
-        // Default tab = Accounts
+        // Load default fragment only once
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
                 .replace(R.id.fragment_container, AccountsFragment())
+                .setReorderingAllowed(true)
                 .commit()
+            bottomNav.selectedItemId = R.id.nav_accounts
         }
 
         bottomNav.setOnItemSelectedListener { item ->
             val fragment = when (item.itemId) {
                 R.id.nav_accounts -> AccountsFragment()
-                R.id.nav_trans -> TransactionsFragment() // we’ll migrate later
-                R.id.nav_stats -> StatsFragment()        // migrate later
-                R.id.nav_more -> MoreFragment()          // migrate later
+                R.id.nav_trans    -> TransactionsFragment()
+                R.id.nav_stats    -> StatsFragment()
+                R.id.nav_more     -> {
+                    Log.d("HomeActivity", "Loading MoreFragment")
+                    MoreFragment()
+                }
                 else -> null
             }
+
             fragment?.let {
                 supportFragmentManager.beginTransaction()
                     .replace(R.id.fragment_container, it)
+                    .setReorderingAllowed(true) // safer transaction
                     .commit()
             }
             true
         }
     }
 }
-
-

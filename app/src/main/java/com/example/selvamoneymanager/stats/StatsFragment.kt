@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.selvamoneymanager.R
 import com.example.selvamoneymanager.db.AppDatabase
 import com.example.selvamoneymanager.db.TransactionDao
+import com.example.selvamoneymanager.db.TransactionType
 import com.example.selvamoneymanager.trans.CategoryTotal
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.Entry
@@ -203,13 +204,13 @@ class StatsFragment : Fragment() {
     private fun loadAndRender() {
         viewLifecycleOwner.lifecycleScope.launch {
             val (start, end) = periodBounds(cal)
-            val type = if (chipIncome.isChecked) "INCOME" else "EXPENSE"
+            val type = if (chipIncome.isChecked) TransactionType.INCOME else TransactionType.EXPENSE
             val rows: List<CategoryTotal> = txnDao.getCategoryTotalsInRange(type, start, end)
             renderPie(rows, type)
         }
     }
 
-    private fun renderPie(rows: List<CategoryTotal>, type: String) {
+    private fun renderPie(rows: List<CategoryTotal>, type: TransactionType) {
         lastRows = rows
         tvSelectedCategory.text = ""
 
@@ -223,8 +224,10 @@ class StatsFragment : Fragment() {
         }
 
         val total = rows.sumOf { it.total }
-        val center = if (type == "INCOME") "Earned\n₹%.2f".format(total) else "Spent\n₹%.2f".format(total)
-        tvTotalSummary.text = if (type == "INCOME") "Earned: ₹%.2f".format(total) else "Spent: ₹%.2f".format(total)
+        val center = if (type == TransactionType.INCOME) "Earned\n₹%.2f".format(total)
+        else "Spent\n₹%.2f".format(total)
+        tvTotalSummary.text = if (type == TransactionType.INCOME) "Earned: ₹%.2f".format(total)
+        else "Spent: ₹%.2f".format(total)
 
         val entries = rows.map { PieEntry(it.total.toFloat(), it.category ?: "Uncategorized") }
         val colors = entries.map { e -> colorForCategory(e.label ?: "Uncategorized") }
