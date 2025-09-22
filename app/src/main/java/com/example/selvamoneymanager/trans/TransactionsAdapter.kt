@@ -36,7 +36,7 @@ class TransactionsAdapter(private val items: List<TxnListItem>) :
             }
             TYPE_MONTH_TOTAL -> {
                 val v = LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_transaction, parent, false)
+                    .inflate(R.layout.item_month_total, parent, false)
                 MonthTotalVH(v)
             }
             else -> {
@@ -63,14 +63,16 @@ class TransactionsAdapter(private val items: List<TxnListItem>) :
     }
 
     class MonthTotalVH(v: View) : RecyclerView.ViewHolder(v) {
-        private val top = v.findViewById<TextView>(R.id.tvTop)
-        private val desc = v.findViewById<TextView>(R.id.tvDesc)
-        private val da = v.findViewById<TextView>(R.id.tvDateAmount)
+        private val monthLabel = v.findViewById<TextView>(R.id.tvMonthLabel)
+        private val totalView = v.findViewById<TextView>(R.id.tvMonthTotal)
+
         fun bind(item: TxnListItem.MonthTotal) {
-            top.text = item.monthLabel
-            desc.text = ""
-            da.text = "₹%.2f".format(item.total)
-            da.setTextColor(if (item.total >= 0) 0xFF00BCD4.toInt() else 0xFFF44336.toInt())
+            monthLabel.text = item.monthLabel
+            totalView.text = "₹%.2f".format(item.total)
+            totalView.setTextColor(
+                if (item.total >= 0) 0xFF00BCD4.toInt()
+                else 0xFFF44336.toInt()
+            )
         }
     }
 
