@@ -105,6 +105,11 @@ class AddTransactionFragment : Fragment() {
         }
         rgType.setOnCheckedChangeListener { _, _ -> applyTypeUI() }
         applyTypeUI()
+        if (rbExpense.isChecked) {
+            loadCategories(CategoryType.EXPENSE)
+        } else if (rbIncome.isChecked) {
+            loadCategories(CategoryType.INCOME)
+        }
 
         // Date picker
         fun updateDateText() {

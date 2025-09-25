@@ -62,22 +62,36 @@ interface TransactionDao {
     """)
     suspend fun getAllRows(): List<TransactionRow>
 
-    // Get totals grouped by category
+    // ✅ Get totals grouped by category (now includes categoryId)
     @Query("""
         SELECT 
+          t.categoryId AS categoryId,
           COALESCE(cat.name, 'Uncategorized') AS category,
           ABS(SUM(t.amount)) AS total
         FROM transactions t
         LEFT JOIN categories cat ON cat.id = t.categoryId
         WHERE t.type = :type
           AND t.dateMillis BETWEEN :startMillis AND :endMillis
-        GROUP BY COALESCE(cat.name, 'Uncategorized')
+        GROUP BY t.categoryId, COALESCE(cat.name, 'Uncategorized')
         HAVING ABS(SUM(t.amount)) > 0
         ORDER BY total DESC
     """)
     suspend fun getCategoryTotalsInRange(
-        type: TransactionType,   // enum, thanks to TypeConverter
+        type: TransactionType,
         startMillis: Long,
         endMillis: Long
     ): List<CategoryTotal>
+
+    // Get all txns for a given categoryId
+    @Query("""
+        SELECT * FROM transactions
+        WHERE categoryId = :categoryId
+          AND dateMillis BETWEEN :startDate AND :endDate
+        ORDER BY dateMillis DESC
+    """)
+    suspend fun getTransactionsByCategory(
+        categoryId: Int,
+        startDate: Long,
+        endDate: Long
+    ): List<Transaction>
 }

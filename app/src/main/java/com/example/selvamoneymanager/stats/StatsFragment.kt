@@ -8,8 +8,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
-import android.widget.AutoCompleteTextView
 import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.ImageButton
 import android.widget.TextView
 import androidx.fragment.app.Fragment
@@ -57,6 +57,10 @@ class StatsFragment : Fragment() {
     private var lastRows: List<CategoryTotal> = emptyList()
     private var lastSelectedAmt: Double = 0.0
 
+    /** Derived period string for child fragments */
+    private val selectedTimePeriod: String
+        get() = if (isYearly) "yearly" else "monthly"
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -77,7 +81,10 @@ class StatsFragment : Fragment() {
         tvSelectedCategory = view.findViewById(R.id.tvSelectedCategory)
 
         rvCategoryTotals.layoutManager = LinearLayoutManager(requireContext())
-        catAdapter = CategoryTotalsAdapter(onItemClick = { name -> highlightCategory(name) })
+        catAdapter = CategoryTotalsAdapter(onItemClick = { categoryName ->
+            val catId = lastRows.find { it.category == categoryName }?.categoryId ?: return@CategoryTotalsAdapter
+            openCategoryTransactions(catId, categoryName)
+        })
         rvCategoryTotals.adapter = catAdapter
 
         setupChart()
@@ -187,7 +194,13 @@ class StatsFragment : Fragment() {
 
                 catAdapter.setSelectedCategory(cat)
                 val pos = catAdapter.indexOfCategory(cat)
-                if (pos >= 0) rvCategoryTotals.smoothScrollToPosition(pos)   // <-- FIXED
+                if (pos >= 0) rvCategoryTotals.smoothScrollToPosition(pos)
+
+                // ✅ Open transaction list for this category
+                val catId = lastRows.find { (it.category ?: "Uncategorized") == cat }?.categoryId
+                if (catId != null) {
+                    openCategoryTransactions(catId, cat)
+                }
             }
 
             override fun onNothingSelected() {
@@ -199,6 +212,18 @@ class StatsFragment : Fragment() {
                 pieChart.crossfadeCenterText(center)
             }
         })
+    }
+
+    private fun openCategoryTransactions(categoryId: Int, categoryName: String) {
+        val fragment = CategoryTransactionsFragment.newInstance(
+            categoryId,
+            categoryName,
+            selectedTimePeriod
+        )
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null)
+            .commit()
     }
 
     private fun loadAndRender() {
