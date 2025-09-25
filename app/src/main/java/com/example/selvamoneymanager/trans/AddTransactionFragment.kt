@@ -39,10 +39,14 @@ class AddTransactionFragment : Fragment() {
     private var accounts: List<Account> = emptyList()
     private var categories: List<CategoryEntity> = emptyList()
 
+    // Edit mode tracking
+    private var txnId: Long = -1
+    private var editingTxn: Transaction? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         return inflater.inflate(R.layout.fragment_add_transaction, container, false)
     }
 
@@ -54,6 +58,7 @@ class AddTransactionFragment : Fragment() {
         accDao = db.accountDao()
         categoryDao = db.categoryDao()
 
+        // Init views
         etDate = view.findViewById(R.id.etDate)
         spAccount = view.findViewById(R.id.spAccount)
         spCategory = view.findViewById(R.id.spCategory)
@@ -69,10 +74,26 @@ class AddTransactionFragment : Fragment() {
         spFrom = view.findViewById(R.id.spFrom)
         spTo = view.findViewById(R.id.spTo)
 
-        // Set initial categories
-        currentType()?.let { loadCategories(it) }
+        // Detect edit mode
+        txnId = arguments?.getLong("txnId", -1) ?: -1
+        if (txnId != -1L) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                editingTxn = txnDao.getById(txnId)
+                editingTxn?.let { txn ->
+                    selectedDateMillis = txn.dateMillis
+                    etDesc.setText(txn.description ?: "")
+                    etAmount.setText(abs(txn.amount).toString())
 
-        // Toggle UI based on type
+                    when (txn.type) {
+                        TransactionType.INCOME -> rbIncome.isChecked = true
+                        TransactionType.EXPENSE -> rbExpense.isChecked = true
+                        TransactionType.TRANSFER -> rbTransfer.isChecked = true
+                    }
+                }
+            }
+        }
+
+        // Toggle UI
         fun applyTypeUI() {
             if (rbTransfer.isChecked) {
                 layoutIE.visibility = View.GONE
@@ -101,7 +122,8 @@ class AddTransactionFragment : Fragment() {
                 requireContext(),
                 { _, y, m, d ->
                     val cal = Calendar.getInstance().apply {
-                        set(y, m, d, 0, 0, 0); set(Calendar.MILLISECOND, 0)
+                        set(y, m, d, 0, 0, 0)
+                        set(Calendar.MILLISECOND, 0)
                     }
                     selectedDateMillis = cal.timeInMillis
                     updateDateText()
@@ -129,6 +151,22 @@ class AddTransactionFragment : Fragment() {
                 spAccount.adapter = spinnerAdapter
                 spFrom.adapter = spinnerAdapter
                 spTo.adapter = spinnerAdapter
+
+                // Pre-select account if editing
+                editingTxn?.let { txn ->
+                    txn.accountId?.let { id ->
+                        val pos = accounts.indexOfFirst { it.id == id }
+                        if (pos >= 0) spAccount.setSelection(pos)
+                    }
+                    txn.fromAccountId?.let { id ->
+                        val pos = accounts.indexOfFirst { it.id == id }
+                        if (pos >= 0) spFrom.setSelection(pos)
+                    }
+                    txn.toAccountId?.let { id ->
+                        val pos = accounts.indexOfFirst { it.id == id }
+                        if (pos >= 0) spTo.setSelection(pos)
+                    }
+                }
             }
         }
 
@@ -141,63 +179,60 @@ class AddTransactionFragment : Fragment() {
             }
         }
 
-        // Save transaction
+        // Save
         btnSave.setOnClickListener {
             val desc = etDesc.text.toString().trim()
             val amount = etAmount.text.toString().toDoubleOrNull() ?: 0.0
 
-            val txnTypeStr = when {
-                rbTransfer.isChecked -> "TRANSFER"
-                rbIncome.isChecked -> "INCOME"
-                else -> "EXPENSE"
+            val txnType = when {
+                rbTransfer.isChecked -> TransactionType.TRANSFER
+                rbIncome.isChecked -> TransactionType.INCOME
+                else -> TransactionType.EXPENSE
             }
 
             viewLifecycleOwner.lifecycleScope.launch {
-                val txn = when (txnTypeStr) {
-                    "TRANSFER" -> {
-                        val fromAcc = accounts.getOrNull(spFrom.selectedItemPosition)
-                        val toAcc = accounts.getOrNull(spTo.selectedItemPosition)
-                        if (fromAcc == null || toAcc == null || fromAcc.id == toAcc.id) {
-                            Toast.makeText(requireContext(), "Choose different From/To accounts", Toast.LENGTH_SHORT).show()
-                            return@launch
-                        }
-                        Transaction(
-                            type = TransactionType.TRANSFER,   // ✅ use enum
-                            dateMillis = selectedDateMillis,
-                            accountId = null,
-                            categoryId = null,
-                            description = desc,
-                            amount = amount,
-                            fromAccountId = fromAcc.id,
-                            toAccountId = toAcc.id
-                        )
-                    }
-                    else -> {
-                        val account = accounts.getOrNull(spAccount.selectedItemPosition)
-                        if (account == null) {
-                            Toast.makeText(requireContext(), "Select an account", Toast.LENGTH_SHORT).show()
-                            return@launch
-                        }
-                        val selectedCat = categories.getOrNull(spCategory.selectedItemPosition)
-                        val categoryId = selectedCat?.id
-                        val signedAmount = if (txnTypeStr == "EXPENSE") -abs(amount) else abs(amount)
-                        Transaction(
-                            type = if (txnTypeStr == "EXPENSE") TransactionType.EXPENSE else TransactionType.INCOME, // ✅ use enum
-                            dateMillis = selectedDateMillis,
-                            amount = signedAmount,
-                            categoryId = categoryId,
-                            description = desc,
-                            accountId = account.id,
-                            fromAccountId = null,
-                            toAccountId = null
-                        )
-                    }
+                if (txnId == -1L) {
+                    val txn = buildTransaction(txnType, amount, desc)
+                    txnDao.insert(txn)
+                    Toast.makeText(requireContext(), "Transaction added!", Toast.LENGTH_SHORT).show()
+                } else {
+                    val updated = buildTransaction(txnType, amount, desc).copy(id = editingTxn!!.id)
+                    txnDao.update(updated)
+                    Toast.makeText(requireContext(), "Transaction updated!", Toast.LENGTH_SHORT).show()
                 }
-
-                txnDao.insert(txn)
-                Toast.makeText(requireContext(), "Transaction added!", Toast.LENGTH_SHORT).show()
                 parentFragmentManager.popBackStack()
             }
+        }
+    }
+
+    private fun buildTransaction(type: TransactionType, amount: Double, desc: String): Transaction {
+        return if (type == TransactionType.TRANSFER) {
+            val fromAcc = accounts.getOrNull(spFrom.selectedItemPosition)
+            val toAcc = accounts.getOrNull(spTo.selectedItemPosition)
+            Transaction(
+                type = TransactionType.TRANSFER,
+                dateMillis = selectedDateMillis,
+                amount = amount,
+                description = desc,
+                accountId = null,
+                categoryId = null,
+                fromAccountId = fromAcc?.id,
+                toAccountId = toAcc?.id
+            )
+        } else {
+            val account = accounts.getOrNull(spAccount.selectedItemPosition)
+            val selectedCat = categories.getOrNull(spCategory.selectedItemPosition)
+            val signedAmount = if (type == TransactionType.EXPENSE) -abs(amount) else abs(amount)
+            Transaction(
+                type = type,
+                dateMillis = selectedDateMillis,
+                amount = signedAmount,
+                description = desc,
+                accountId = account?.id,
+                categoryId = selectedCat?.id,
+                fromAccountId = null,
+                toAccountId = null
+            )
         }
     }
 
@@ -217,6 +252,12 @@ class AddTransactionFragment : Fragment() {
                 names
             ).apply { setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item) }
             spCategory.adapter = adapter
+
+            // Pre-select category if editing
+            editingTxn?.categoryId?.let { catId ->
+                val pos = categories.indexOfFirst { it.id == catId }
+                if (pos >= 0) spCategory.setSelection(pos)
+            }
         }
     }
 }

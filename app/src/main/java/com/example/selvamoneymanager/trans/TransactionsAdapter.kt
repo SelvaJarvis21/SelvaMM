@@ -9,8 +9,10 @@ import com.example.selvamoneymanager.R
 import java.text.SimpleDateFormat
 import java.util.*
 
-class TransactionsAdapter(private val items: List<TxnListItem>) :
-    RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class TransactionsAdapter(
+    private var items: List<TxnListItem>,               // now mutable
+    private val onRowClick: (TransactionRow) -> Unit    // comma added ✅
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     private val dfDay = SimpleDateFormat("EEE, dd MMM", Locale.getDefault())
     private val dfDate = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
@@ -53,8 +55,17 @@ class TransactionsAdapter(private val items: List<TxnListItem>) :
         when (val item = items[position]) {
             is TxnListItem.Section -> (holder as SectionVH).bind(item.title)
             is TxnListItem.MonthTotal -> (holder as MonthTotalVH).bind(item)
-            is TxnListItem.Row -> (holder as RowVH).bind(item.data)
+            is TxnListItem.Row -> {
+                (holder as RowVH).bind(item.data)
+                holder.itemView.setOnClickListener { onRowClick(item.data) }
+            }
         }
+    }
+
+    /** Call this to update the list without recreating the adapter */
+    fun updateItems(newItems: List<TxnListItem>) {
+        items = newItems
+        notifyDataSetChanged()
     }
 
     class SectionVH(v: View) : RecyclerView.ViewHolder(v) {
@@ -86,31 +97,26 @@ class TransactionsAdapter(private val items: List<TxnListItem>) :
             val date = dfDate.format(Date(r.dateMillis))
             when (r.type.uppercase(Locale.getDefault())) {
                 "INCOME" -> {
-                    // e.g., "Salary • HDFC"
                     top.text = "${r.category ?: "Income"} • ${r.accountName ?: ""}"
                     desc.text = r.description
                     da.text = "$date • ₹%.2f".format(r.amount)
-                    da.setTextColor(0xFF00A65A.toInt()) // green-ish
+                    da.setTextColor(0xFF00A65A.toInt())
                 }
                 "EXPENSE" -> {
-                    // e.g., "Food • HDFC"
                     top.text = "${r.category ?: "Expense"} • ${r.accountName ?: ""}"
                     desc.text = r.description
                     da.text = "$date • ₹%.2f".format(r.amount)
-                    da.setTextColor(0xFFF44336.toInt()) // red-ish
+                    da.setTextColor(0xFFF44336.toInt())
                 }
                 "TRANSFER" -> {
-                    // e.g., "Transfer • HDFC → SBI"
                     val from = r.fromAccountName ?: "?"
                     val to = r.toAccountName ?: "?"
                     top.text = "Transfer • $from → $to"
                     desc.text = r.description
-                    // show absolute amount for neutral transfer display
                     da.text = "$date • ₹%.2f".format(kotlin.math.abs(r.amount))
-                    da.setTextColor(0xFF00BCD4.toInt()) // cyan/neutral
+                    da.setTextColor(0xFF00BCD4.toInt())
                 }
                 else -> {
-                    // Fallback
                     top.text = (r.category ?: "Txn") + (if (!r.accountName.isNullOrBlank()) " • ${r.accountName}" else "")
                     desc.text = r.description
                     da.text = "$date • ₹%.2f".format(r.amount)

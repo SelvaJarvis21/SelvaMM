@@ -41,6 +41,9 @@ interface TransactionDao {
         endMillis: Long
     ): List<TransactionRow>
 
+    @Query("SELECT * FROM transactions WHERE id = :txnId LIMIT 1")
+    suspend fun getById(txnId: Long): Transaction?
+
     // Get all rows (latest first)
     @Query("""
         SELECT 

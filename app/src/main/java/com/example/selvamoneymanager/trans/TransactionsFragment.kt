@@ -43,7 +43,7 @@ class TransactionsFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         return inflater.inflate(R.layout.fragment_transactions, container, false)
     }
 
@@ -59,8 +59,17 @@ class TransactionsFragment : Fragment() {
         rbMonth = view.findViewById(R.id.rbMonth)
         recycler = view.findViewById(R.id.recyclerTxns)
 
+        // Setup RecyclerView + adapter once
         recycler.layoutManager = LinearLayoutManager(requireContext())
-        adapter = TransactionsAdapter(emptyList())
+        adapter = TransactionsAdapter(emptyList()) { txnRow ->
+            val bundle = Bundle().apply { putLong("txnId", txnRow.id.toLong()) }
+            val fragment = AddTransactionFragment().apply { arguments = bundle }
+
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, fragment) // same ID as FAB
+                .addToBackStack(null)
+                .commit()
+        }
         recycler.adapter = adapter
 
         // Default = Month mode
@@ -89,7 +98,7 @@ class TransactionsFragment : Fragment() {
             loadTransactions()
         }
 
-        // FAB → AddTransactionFragment
+        // FAB → AddTransactionFragment (new entry mode)
         view.findViewById<FloatingActionButton>(R.id.fabAddTxn).setOnClickListener {
             parentFragmentManager.beginTransaction()
                 .replace(R.id.fragment_container, AddTransactionFragment())
@@ -122,29 +131,21 @@ class TransactionsFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             val rows: List<TransactionRow> = withContext(Dispatchers.IO) {
+                val zone = ZoneId.systemDefault()
                 val (start, end) = if (rbDay.isChecked) {
-                    val zone = ZoneId.systemDefault()
                     val start = currentDate.atStartOfDay(zone).toInstant().toEpochMilli()
                     val end = currentDate.plusDays(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1
                     start to end
                 } else {
-                    val zone = ZoneId.systemDefault()
                     val start = currentMonth.atDay(1).atStartOfDay(zone).toInstant().toEpochMilli()
                     val end = currentMonth.plusMonths(1).atDay(1).atStartOfDay(zone).toInstant().toEpochMilli() - 1
                     start to end
                 }
-
                 dao.getRowsInRange(start, end)
             }
 
-            val items = if (rbDay.isChecked) {
-                buildDayItems(rows)
-            } else {
-                buildMonthItems(rows)
-            }
-
-            adapter = TransactionsAdapter(items)
-            recycler.adapter = adapter
+            val items = if (rbDay.isChecked) buildDayItems(rows) else buildMonthItems(rows)
+            adapter.updateItems(items)
         }
     }
 
@@ -158,7 +159,7 @@ class TransactionsFragment : Fragment() {
                 .atZone(ZoneId.systemDefault())
                 .toLocalDate()
         }
-            .toSortedMap(compareByDescending<LocalDate> { it }) // explicitly typed
+            .toSortedMap(compareByDescending { it })
             .forEach { (date, txns) ->
                 items.add(TxnListItem.Section(date.format(df)))
                 txns.forEach { items.add(TxnListItem.Row(it)) }
