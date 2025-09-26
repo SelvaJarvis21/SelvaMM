@@ -3,6 +3,7 @@ package com.example.selvamoneymanager.accounts
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.selvamoneymanager.R
@@ -10,8 +11,9 @@ import com.example.selvamoneymanager.db.Account
 
 class AccountAdapter(
     private val items: List<AccountRowItem>,
-    private val onClick: (Account) -> Unit,
-    private val onLongClick: (Account) -> Unit
+    private val onEdit: (Account) -> Unit,
+    private val onDelete: (Account) -> Unit,
+    private val onClick: (Account) -> Unit
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     companion object {
@@ -34,7 +36,7 @@ class AccountAdapter(
         } else {
             val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.item_account, parent, false)
-            AccountViewHolder(view, onClick, onLongClick) // ✅ pass listeners
+            AccountViewHolder(view, onClick, onEdit, onDelete)
         }
     }
 
@@ -57,7 +59,8 @@ class AccountAdapter(
     class AccountViewHolder(
         itemView: View,
         private val onClick: (Account) -> Unit,
-        private val onLongClick: (Account) -> Unit
+        private val onEdit: (Account) -> Unit,
+        private val onDelete: (Account) -> Unit
     ) : RecyclerView.ViewHolder(itemView) {
 
         private val tvAccountName = itemView.findViewById<TextView>(R.id.tvAccountName)
@@ -70,7 +73,6 @@ class AccountAdapter(
             tvAccountName.text = account.name
             tvAmount.text = "₹%.2f".format(account.amount)
 
-            // Show/hide card details
             if (account.balancePayable != 0.0 || account.outstandingBalance != 0.0) {
                 layoutCardDetails.visibility = View.VISIBLE
                 tvPayable.text = "Balance Payable: ₹%.2f".format(account.balancePayable)
@@ -79,17 +81,26 @@ class AccountAdapter(
                 layoutCardDetails.visibility = View.GONE
             }
 
-            // Color code based on value
             tvAmount.setTextColor(
                 if (account.amount >= 0) 0xFF00BCD4.toInt() else 0xFFF44336.toInt()
             )
 
             itemView.setOnClickListener { onClick(account) }
+
             itemView.setOnLongClickListener {
-                onLongClick(account)
+                // show Edit/Delete menu
+                val popup = PopupMenu(itemView.context, itemView)
+                popup.inflate(R.menu.menu_account_item)
+                popup.setOnMenuItemClickListener {
+                    when (it.itemId) {
+                        R.id.action_edit -> onEdit(account)
+                        R.id.action_delete -> onDelete(account)
+                    }
+                    true
+                }
+                popup.show()
                 true
             }
         }
     }
-
 }

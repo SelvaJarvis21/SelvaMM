@@ -1,11 +1,13 @@
 package com.example.selvamoneymanager.accounts
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,7 +19,6 @@ import com.example.selvamoneymanager.db.AppDatabase
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 import kotlin.math.abs
-import com.example.selvamoneymanager.accounts.AddAccountFragment
 
 class AccountsFragment : Fragment() {
 
@@ -41,7 +42,7 @@ class AccountsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // DAO
-        dao = AppDatabase.Companion.getDatabase(requireContext()).accountDao()
+        dao = AppDatabase.getDatabase(requireContext()).accountDao()
 
         // Summary views
         tvTotalAccounts = view.findViewById(R.id.tvTotalAccounts)
@@ -52,9 +53,10 @@ class AccountsFragment : Fragment() {
         recycler = view.findViewById(R.id.recyclerAccounts)
         recycler.layoutManager = LinearLayoutManager(requireContext())
         adapter = AccountAdapter(
-            items = displayItems,
-            onClick = { /* TODO: handle account tap */ },
-            onLongClick = { /* TODO: handle account long-press */ }
+            displayItems,
+            onEdit = { account -> showEditDialog(account) },
+            onDelete = { account -> showDeleteDialog(account) },
+            onClick = { account -> openAccountDetails(account) }
         )
         recycler.adapter = adapter
 
@@ -101,6 +103,52 @@ class AccountsFragment : Fragment() {
                 }
             }
         return result
+    }
+
+    private fun openAccountDetails(account: Account) {
+        Toast.makeText(requireContext(), "Clicked ${account.name}", Toast.LENGTH_SHORT).show()
+        // Later: navigate to Account details / transactions
+    }
+
+    private fun showEditDialog(account: Account) {
+        val dialogView = LayoutInflater.from(requireContext())
+            .inflate(R.layout.dialog_account, null)
+
+        val etName = dialogView.findViewById<EditText>(R.id.etAccountName)
+        val etBalance = dialogView.findViewById<EditText>(R.id.etAccountBalance)
+
+        etName.setText(account.name)
+        etBalance.setText(account.amount.toString())
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Edit Account")
+            .setView(dialogView)
+            .setPositiveButton("Update") { _, _ ->
+                val updated = account.copy(
+                    name = etName.text.toString(),
+                    amount = etBalance.text.toString().toDoubleOrNull() ?: 0.0
+                )
+                viewLifecycleOwner.lifecycleScope.launch {
+                    dao.update(updated)
+                    loadAndRender()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showDeleteDialog(account: Account) {
+        AlertDialog.Builder(requireContext())
+            .setTitle("Delete Account")
+            .setMessage("Are you sure you want to delete ${account.name}?")
+            .setPositiveButton("Delete") { _, _ ->
+                viewLifecycleOwner.lifecycleScope.launch {
+                    dao.delete(account)
+                    loadAndRender()
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     override fun onResume() {
