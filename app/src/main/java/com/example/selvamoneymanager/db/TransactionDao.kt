@@ -94,4 +94,8 @@ interface TransactionDao {
         startDate: Long,
         endDate: Long
     ): List<Transaction>
+
+    @Query("SELECT COUNT(*) FROM transactions WHERE categoryId = :catId")
+    suspend fun countByCategory(catId: Int): Int
+
 }

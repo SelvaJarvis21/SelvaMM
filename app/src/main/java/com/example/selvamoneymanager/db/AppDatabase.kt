@@ -6,16 +6,18 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
+import androidx.sqlite.db.SupportSQLiteDatabase   // ✅ required
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 // Converters for enums
 class AppConverters {
-    // CategoryType
     @TypeConverter
     fun fromCategoryType(value: CategoryType): String = value.name
     @TypeConverter
     fun toCategoryType(value: String): CategoryType = CategoryType.valueOf(value)
 
-    // TransactionType
     @TypeConverter
     fun fromTransactionType(value: TransactionType): String = value.name
     @TypeConverter
@@ -23,22 +25,19 @@ class AppConverters {
 }
 
 @Database(
-    entities = [
-        Account::class,
-        Transaction::class,
-        CategoryEntity::class
-    ],
-    version = 8, // bump since schema changed
-    exportSchema = false
+    entities = [Transaction::class, Account::class, CategoryEntity::class],
+    version = 2 //bumped
 )
 @TypeConverters(AppConverters::class)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun accountDao(): AccountDao
+
     abstract fun transactionDao(): TransactionDao
+    abstract fun accountDao(): AccountDao
     abstract fun categoryDao(): CategoryDao
 
     companion object {
-        @Volatile private var INSTANCE: AppDatabase? = null
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
@@ -47,8 +46,15 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "selva_db"
                 )
-                    // For dev: wipe and rebuild on version change
                     .fallbackToDestructiveMigration()
+                    .addCallback(object : RoomDatabase.Callback() {
+                        override fun onCreate(db: SupportSQLiteDatabase) {
+                            super.onCreate(db)
+                            CoroutineScope(Dispatchers.IO).launch {
+                                getDatabase(context).categoryDao().insertDefaults()
+                            }
+                        }
+                    })
                     .build()
                 INSTANCE = instance
                 instance
