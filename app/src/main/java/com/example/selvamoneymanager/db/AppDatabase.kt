@@ -6,10 +6,11 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
-import androidx.sqlite.db.SupportSQLiteDatabase   // ✅ required
+import androidx.sqlite.db.SupportSQLiteDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.concurrent.Executors
 
 // Converters for enums
 class AppConverters {
@@ -26,7 +27,8 @@ class AppConverters {
 
 @Database(
     entities = [Transaction::class, Account::class, CategoryEntity::class],
-    version = 2 //bumped
+    version = 4, // bumped
+    exportSchema = true
 )
 @TypeConverters(AppConverters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -46,12 +48,33 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "selva_db"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration() // wipes old DB if mismatch
                     .addCallback(object : RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
-                            CoroutineScope(Dispatchers.IO).launch {
-                                getDatabase(context).categoryDao().insertDefaults()
+
+                            // Insert default categories on first DB creation
+                            Executors.newSingleThreadExecutor().execute {
+                                val defaults = listOf(
+                                    CategoryEntity(name = "Salary", type = CategoryType.INCOME),
+                                    CategoryEntity(name = "Freelance/Side Hustle", type = CategoryType.INCOME),
+                                    CategoryEntity(name = "Business Income", type = CategoryType.INCOME),
+                                    CategoryEntity(name = "Investments", type = CategoryType.INCOME),
+                                    CategoryEntity(name = "Gifts", type = CategoryType.INCOME),
+                                    CategoryEntity(name = "Rental Income", type = CategoryType.INCOME),
+                                    CategoryEntity(name = "Other Income", type = CategoryType.INCOME),
+                                    CategoryEntity(name = "Food & Dining", type = CategoryType.EXPENSE),
+                                    CategoryEntity(name = "Transport", type = CategoryType.EXPENSE),
+                                    CategoryEntity(name = "Shopping", type = CategoryType.EXPENSE),
+                                    CategoryEntity(name = "Bills & Utilities", type = CategoryType.EXPENSE),
+                                    CategoryEntity(name = "Entertainment", type = CategoryType.EXPENSE),
+                                    CategoryEntity(name = "Health & Fitness", type = CategoryType.EXPENSE),
+                                    CategoryEntity(name = "Other Expenses", type = CategoryType.EXPENSE)
+                                )
+
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    getDatabase(context).categoryDao().insertAll(defaults)
+                                }
                             }
                         }
                     })

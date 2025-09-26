@@ -21,15 +21,14 @@ class AccountAdapter(
         private const val TYPE_ACCOUNT_ITEM = 1
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return when (items[position]) {
+    override fun getItemViewType(position: Int): Int =
+        when (items[position]) {
             is AccountRowItem.SectionHeader -> TYPE_SECTION_HEADER
             is AccountRowItem.AccountItem -> TYPE_ACCOUNT_ITEM
         }
-    }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        return if (viewType == TYPE_SECTION_HEADER) {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder =
+        if (viewType == TYPE_SECTION_HEADER) {
             val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.item_section_header, parent, false)
             SectionHeaderViewHolder(view)
@@ -38,14 +37,13 @@ class AccountAdapter(
                 .inflate(R.layout.item_account, parent, false)
             AccountViewHolder(view, onClick, onEdit, onDelete)
         }
-    }
 
     override fun getItemCount(): Int = items.size
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (val item = items[position]) {
             is AccountRowItem.SectionHeader -> (holder as SectionHeaderViewHolder).bind(item)
-            is AccountRowItem.AccountItem -> (holder as AccountViewHolder).bind(item.account)
+            is AccountRowItem.AccountItem -> (holder as AccountViewHolder).bind(item)
         }
     }
 
@@ -69,9 +67,12 @@ class AccountAdapter(
         private val tvOutstanding = itemView.findViewById<TextView>(R.id.tvOutstandingBalance)
         private val layoutCardDetails = itemView.findViewById<View>(R.id.layoutCardDetails)
 
-        fun bind(account: Account) {
+        fun bind(item: AccountRowItem.AccountItem) {
+            val account = item.account
+            val balance = item.currentBalance
+
             tvAccountName.text = account.name
-            tvAmount.text = "₹%.2f".format(account.amount)
+            tvAmount.text = "₹%.2f".format(balance)
 
             if (account.balancePayable != 0.0 || account.outstandingBalance != 0.0) {
                 layoutCardDetails.visibility = View.VISIBLE
@@ -82,13 +83,11 @@ class AccountAdapter(
             }
 
             tvAmount.setTextColor(
-                if (account.amount >= 0) 0xFF00BCD4.toInt() else 0xFFF44336.toInt()
+                if (balance >= 0) 0xFF00BCD4.toInt() else 0xFFF44336.toInt()
             )
 
             itemView.setOnClickListener { onClick(account) }
-
             itemView.setOnLongClickListener {
-                // show Edit/Delete menu
                 val popup = PopupMenu(itemView.context, itemView)
                 popup.inflate(R.menu.menu_account_item)
                 popup.setOnMenuItemClickListener {

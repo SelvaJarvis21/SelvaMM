@@ -33,24 +33,4 @@ interface CategoryDao {
     @Query("SELECT COUNT(*) FROM categories")
     suspend fun count(): Int
 
-    // ✅ Insert default categories (called from AppDatabase onCreate)
-    suspend fun insertDefaults() {
-        val defaults = listOf(
-            CategoryEntity(name = "Salary", type = CategoryType.INCOME),
-            CategoryEntity(name = "Freelance/Side Hustle", type = CategoryType.INCOME),
-            CategoryEntity(name = "Business Income", type = CategoryType.INCOME),
-            CategoryEntity(name = "Investments", type = CategoryType.INCOME),
-            CategoryEntity(name = "Gifts", type = CategoryType.INCOME),
-            CategoryEntity(name = "Rental Income", type = CategoryType.INCOME),
-            CategoryEntity(name = "Other Income", type = CategoryType.INCOME),
-            CategoryEntity(name = "Food & Dining", type = CategoryType.EXPENSE),
-            CategoryEntity(name = "Transport", type = CategoryType.EXPENSE),
-            CategoryEntity(name = "Shopping", type = CategoryType.EXPENSE),
-            CategoryEntity(name = "Bills & Utilities", type = CategoryType.EXPENSE),
-            CategoryEntity(name = "Entertainment", type = CategoryType.EXPENSE),
-            CategoryEntity(name = "Health & Fitness", type = CategoryType.EXPENSE),
-            CategoryEntity(name = "Other Expenses", type = CategoryType.EXPENSE)
-        )
-        insertAll(defaults)
-    }
 }

@@ -25,8 +25,8 @@ data class Account(
     @ColumnInfo(name = "name")
     val name: String,                  // e.g., "RBO", "Cash Wallet"
 
-    @ColumnInfo(name = "amount")
-    val amount: Double,                // Main balance (consider minor units later)
+    @ColumnInfo(name = "openingBalance")
+    val openingBalance: Double = 0.0,                // Main balance (consider minor units later)
 
     @ColumnInfo(name = "balance_payable")
     val balancePayable: Double = 0.0,  // For credit cards (optional)

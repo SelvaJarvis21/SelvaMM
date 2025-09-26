@@ -4,6 +4,8 @@ import androidx.room.*
 import com.example.selvamoneymanager.trans.CategoryTotal
 import com.example.selvamoneymanager.trans.TransactionRow
 
+
+
 @Dao
 interface TransactionDao {
 
@@ -97,5 +99,43 @@ interface TransactionDao {
 
     @Query("SELECT COUNT(*) FROM transactions WHERE categoryId = :catId")
     suspend fun countByCategory(catId: Int): Int
+
+    // ✅ Per-account totals including transfers (assumes types: 'income' | 'expense' | 'transfer')
+    // If your Account.id is Long, change all Int to Long here.
+    @Query("""
+    SELECT
+      a.id AS accountId,
+      COALESCE((
+        SELECT SUM(t.amount)
+        FROM transactions t
+        WHERE t.accountId = a.id AND t.type = 'INCOME'
+      ), 0) AS income,
+      COALESCE((
+        SELECT SUM(ABS(t.amount))
+        FROM transactions t
+        WHERE t.accountId = a.id AND t.type = 'EXPENSE'
+      ), 0) AS expense,
+      COALESCE((
+        SELECT SUM(ABS(t.amount))
+        FROM transactions t
+        WHERE t.type = 'TRANSFER' AND t.toAccountId = a.id
+      ), 0) AS transferIn,
+      COALESCE((
+        SELECT SUM(ABS(t.amount))
+        FROM transactions t
+        WHERE t.type = 'TRANSFER' AND t.fromAccountId = a.id
+      ), 0) AS transferOut
+    FROM accounts a
+    ORDER BY a.id
+""")
+    suspend fun getBalancesByAccount(): List<AccountBalanceResult>
+
+    // (Optional) debug helpers
+    @Query("SELECT DISTINCT type FROM transactions")
+    suspend fun distinctTypes(): List<String>
+
+    @Query("SELECT COUNT(*) FROM transactions WHERE type = 'transfer'")
+    suspend fun countTransfers(): Int
+
 
 }

@@ -16,6 +16,8 @@ import com.example.selvamoneymanager.R
 import com.example.selvamoneymanager.db.Account
 import com.example.selvamoneymanager.db.AccountDao
 import com.example.selvamoneymanager.db.AppDatabase
+import com.example.selvamoneymanager.db.TransactionDao
+import com.example.selvamoneymanager.db.AccountBalanceResult
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 import kotlin.math.abs
@@ -23,6 +25,7 @@ import kotlin.math.abs
 class AccountsFragment : Fragment() {
 
     private lateinit var dao: AccountDao
+    private lateinit var daoTx: TransactionDao
     private lateinit var adapter: AccountAdapter
     private val displayItems = mutableListOf<AccountRowItem>()
 
@@ -41,8 +44,9 @@ class AccountsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // DAO
+        // DAOs
         dao = AppDatabase.getDatabase(requireContext()).accountDao()
+        daoTx = AppDatabase.getDatabase(requireContext()).transactionDao()
 
         // Summary views
         tvTotalAccounts = view.findViewById(R.id.tvTotalAccounts)
@@ -65,7 +69,7 @@ class AccountsFragment : Fragment() {
             .setOnClickListener {
                 parentFragmentManager.beginTransaction()
                     .replace(R.id.fragment_container, AddAccountFragment())
-                    .addToBackStack(null) // allows back button to return
+                    .addToBackStack(null)
                     .commit()
             }
 
@@ -75,31 +79,55 @@ class AccountsFragment : Fragment() {
     private fun loadAndRender() {
         viewLifecycleOwner.lifecycleScope.launch {
             val accounts = dao.getAllAccounts()
+            val balances = daoTx.getBalancesByAccount()
+            val balanceMap = balances.associateBy { it.accountId }
+
+            // Build AccountRowItems with currentBalance
+            val accountItems = accounts.map { acc ->
+                val res: AccountBalanceResult? = balanceMap[acc.id]
+
+                val income = res?.income ?: 0.0
+                val expense = res?.expense ?: 0.0
+                val tin = res?.transferIn ?: 0.0
+                val tout = res?.transferOut ?: 0.0
+
+                val currentBalance = acc.openingBalance + income - expense + tin - tout
+
+                println("DEBUG ${acc.name}: opening=${acc.openingBalance}, " +
+                        "income=$income, expense=$expense, tin=$tin, tout=$tout, " +
+                        "final=$currentBalance")
+
+                AccountRowItem.AccountItem(acc, currentBalance)
+            }
 
             // Totals
-            val totalAssets = accounts.filter { it.amount >= 0 }.sumOf { it.amount }
-            val totalLiabilitiesAbs = abs(accounts.filter { it.amount < 0 }.sumOf { it.amount })
+            val totalAssets = accountItems.filter { it.currentBalance >= 0 }
+                .sumOf { it.currentBalance }
+            val totalLiabilitiesAbs = abs(
+                accountItems.filter { it.currentBalance < 0 }
+                    .sumOf { it.currentBalance }
+            )
             val netWorth = totalAssets - totalLiabilitiesAbs
 
             tvTotalAccounts.text = "₹%.2f".format(totalAssets)
             tvTotalLiabilities.text = "₹%.2f".format(totalLiabilitiesAbs)
             tvNetWorth.text = "₹%.2f".format(netWorth)
 
-            // Grouped list
+            // Recycler data
             displayItems.clear()
-            displayItems.addAll(buildGroupedItems(accounts))
+            displayItems.addAll(buildGroupedItems(accountItems))
             adapter.notifyDataSetChanged()
         }
     }
 
-    private fun buildGroupedItems(accounts: List<Account>): List<AccountRowItem> {
+    private fun buildGroupedItems(accounts: List<AccountRowItem.AccountItem>): List<AccountRowItem> {
         val result = mutableListOf<AccountRowItem>()
-        accounts.groupBy { it.group }
+        accounts.groupBy { it.account.group }
             .toSortedMap(String.CASE_INSENSITIVE_ORDER)
             .forEach { (groupName, groupAccounts) ->
                 result.add(AccountRowItem.SectionHeader(groupName))
-                groupAccounts.sortedBy { it.name.lowercase() }.forEach { acc ->
-                    result.add(AccountRowItem.AccountItem(acc))
+                groupAccounts.sortedBy { it.account.name.lowercase() }.forEach { accItem ->
+                    result.add(accItem)
                 }
             }
         return result
@@ -107,7 +135,7 @@ class AccountsFragment : Fragment() {
 
     private fun openAccountDetails(account: Account) {
         Toast.makeText(requireContext(), "Clicked ${account.name}", Toast.LENGTH_SHORT).show()
-        // Later: navigate to Account details / transactions
+        // TODO: navigate to Account transactions/details
     }
 
     private fun showEditDialog(account: Account) {
@@ -118,7 +146,7 @@ class AccountsFragment : Fragment() {
         val etBalance = dialogView.findViewById<EditText>(R.id.etAccountBalance)
 
         etName.setText(account.name)
-        etBalance.setText(account.amount.toString())
+        etBalance.setText(account.openingBalance.toString())
 
         AlertDialog.Builder(requireContext())
             .setTitle("Edit Account")
@@ -126,7 +154,7 @@ class AccountsFragment : Fragment() {
             .setPositiveButton("Update") { _, _ ->
                 val updated = account.copy(
                     name = etName.text.toString(),
-                    amount = etBalance.text.toString().toDoubleOrNull() ?: 0.0
+                    openingBalance = etBalance.text.toString().toDoubleOrNull() ?: 0.0
                 )
                 viewLifecycleOwner.lifecycleScope.launch {
                     dao.update(updated)

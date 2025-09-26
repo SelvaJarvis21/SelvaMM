@@ -54,7 +54,7 @@ class AddAccountFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            val account = Account(group = group, name = name, amount = amount)
+            val account = Account(group = group, name = name, openingBalance = amount)
 
             viewLifecycleOwner.lifecycleScope.launch {
                 dao.insert(account)
