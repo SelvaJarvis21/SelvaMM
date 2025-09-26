@@ -19,6 +19,8 @@ import com.example.selvamoneymanager.db.CategoryType
 import com.example.selvamoneymanager.db.TransactionDao
 import com.example.selvamoneymanager.more.CategoryAdapter
 import kotlinx.coroutines.launch
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+
 
 class CategoryListFragment : Fragment() {
 
@@ -63,6 +65,25 @@ class CategoryListFragment : Fragment() {
             onDelete = { deleteCategory(it) }
         )
         recycler.adapter = adapter
+
+        // FAB → Add new category
+        view.findViewById<FloatingActionButton>(R.id.fabAddCategory).setOnClickListener {
+            val input = EditText(requireContext())
+            AlertDialog.Builder(requireContext())
+                .setTitle("New Category")
+                .setView(input)
+                .setPositiveButton("Add") { _, _ ->
+                    val name = input.text.toString().trim()
+                    if (name.isNotEmpty()) {
+                        viewLifecycleOwner.lifecycleScope.launch {
+                            categoryDao.insert(CategoryEntity(name = name, type = categoryType))
+                            loadCategories()
+                        }
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
 
         loadCategories()
 
