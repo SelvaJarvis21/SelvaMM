@@ -16,10 +16,11 @@ fun MoreScreenWrapper(
     onOpenIncome: () -> Unit,
     onOpenExpense: () -> Unit,
     onBackup: () -> Unit,
-    onRestore: () -> Unit
+    onRestore: () -> Unit,
+    onImportCsv: () -> Unit
 ) {
     SelvaMoneyManagerTheme {
-        MoreScreen(onOpenIncome, onOpenExpense, onBackup, onRestore)
+        MoreScreen(onOpenIncome, onOpenExpense, onBackup, onRestore, onImportCsv)
     }
 }
 
@@ -28,7 +29,8 @@ fun MoreScreen(
     onOpenIncome: () -> Unit,
     onOpenExpense: () -> Unit,
     onBackup: () -> Unit,
-    onRestore: () -> Unit
+    onRestore: () -> Unit,
+    onImportCsv: () -> Unit
 ) {
     Scaffold { inner ->
         Column(Modifier.padding(inner).padding(16.dp)) {
@@ -51,6 +53,7 @@ fun MoreScreen(
             Button(onClick = onRestore, modifier = Modifier.fillMaxWidth()) {
                 Text("Restore Database")
             }
+            Button(onClick = onImportCsv) { Text("Import CSV") }
         }
     }
 }
