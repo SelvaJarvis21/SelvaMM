@@ -9,6 +9,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
+import com.example.selvamoneymanager.ui.theme.SelvaMoneyManagerTheme
+
+@Composable
+fun MoreScreenWrapper(
+    onOpenIncome: () -> Unit,
+    onOpenExpense: () -> Unit
+) {
+    SelvaMoneyManagerTheme {
+        MoreScreen(onOpenIncome, onOpenExpense)
+    }
+}
+
 @Composable
 fun MoreScreen(
     onOpenIncome: () -> Unit,
