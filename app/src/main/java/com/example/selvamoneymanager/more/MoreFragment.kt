@@ -51,11 +51,16 @@ class MoreFragment : Fragment() {
                         },
                         onRestore = {
                             val result = restoreDatabase(requireContext())
-                            Toast.makeText(
-                                context,
-                                if (result) "Restore successful" else "Restore failed",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            if (result) {
+                                Toast.makeText(context, "Restore successful. Restarting app...", Toast.LENGTH_SHORT).show()
+
+                                // Delay a bit so user can see the toast
+                                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                                    kotlin.system.exitProcess(0)
+                                }, 1500)
+                            } else {
+                                Toast.makeText(context, "Restore failed", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     )
                 }
