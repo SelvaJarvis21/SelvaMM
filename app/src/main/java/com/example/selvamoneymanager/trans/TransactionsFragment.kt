@@ -152,7 +152,7 @@ class TransactionsFragment : Fragment() {
     /** Build list with Section headers for each date */
     private fun buildDayItems(rows: List<TransactionRow>): List<TxnListItem> {
         val items = mutableListOf<TxnListItem>()
-        val df = DateTimeFormatter.ofPattern("EEE, dd MMM", Locale.getDefault())
+        val df = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault())
 
         rows.groupBy {
             Instant.ofEpochMilli(it.dateMillis)
@@ -171,11 +171,24 @@ class TransactionsFragment : Fragment() {
     /** Build list with MonthTotal at the end */
     private fun buildMonthItems(rows: List<TransactionRow>): List<TxnListItem> {
         val items = mutableListOf<TxnListItem>()
+        val df = DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.getDefault())
+
         var total = 0.0
-        rows.forEach {
-            items.add(TxnListItem.Row(it))
-            total += it.amount
+
+        rows.groupBy {
+            Instant.ofEpochMilli(it.dateMillis)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
         }
+            .toSortedMap(compareByDescending { it })
+            .forEach { (date, txns) ->
+                items.add(TxnListItem.Section(date.format(df)))
+                txns.forEach {
+                    items.add(TxnListItem.Row(it))
+                    total += it.amount
+                }
+            }
+
         items.add(
             TxnListItem.MonthTotal(
                 currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())),
@@ -184,4 +197,5 @@ class TransactionsFragment : Fragment() {
         )
         return items
     }
+
 }

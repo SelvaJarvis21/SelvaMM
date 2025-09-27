@@ -41,20 +41,20 @@ import androidx.room.PrimaryKey
     ]
 )
 data class Transaction(
-    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
 
     val type: TransactionType,       // INCOME, EXPENSE, TRANSFER
     val dateMillis: Long,
 
-    val accountId: Int?,             // For income/expense
+    val accountId: Long?,             // For income/expense
     val categoryId: Int?,            // Link to CategoryEntity
 
     val description: String = "",    // Default = empty
     val amount: Double,
 
     // For transfers
-    val fromAccountId: Int? = null,
-    val toAccountId: Int? = null
+    val fromAccountId: Long? = null,
+    val toAccountId: Long? = null
 )
 
 enum class TransactionType { INCOME, EXPENSE, TRANSFER }

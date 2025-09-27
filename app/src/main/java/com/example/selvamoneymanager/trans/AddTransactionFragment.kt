@@ -34,6 +34,7 @@ class AddTransactionFragment : Fragment() {
     private lateinit var etDesc: EditText
     private lateinit var etAmount: EditText
     private lateinit var btnSave: Button
+    private lateinit var btnDelete: Button
 
     private var selectedDateMillis: Long = System.currentTimeMillis()
     private var accounts: List<Account> = emptyList()
@@ -57,6 +58,7 @@ class AddTransactionFragment : Fragment() {
         txnDao = db.transactionDao()
         accDao = db.accountDao()
         categoryDao = db.categoryDao()
+        val txnManager = TransactionManager(txnDao)
 
         // Init views
         etDate = view.findViewById(R.id.etDate)
@@ -65,6 +67,7 @@ class AddTransactionFragment : Fragment() {
         etDesc = view.findViewById(R.id.etDescription)
         etAmount = view.findViewById(R.id.etAmount)
         btnSave = view.findViewById(R.id.btnSaveTxn)
+        btnDelete = view.findViewById(R.id.btnDelete)
         rgType = view.findViewById(R.id.rgType)
         rbIncome = view.findViewById(R.id.rbIncome)
         rbExpense = view.findViewById(R.id.rbExpense)
@@ -102,13 +105,6 @@ class AddTransactionFragment : Fragment() {
                 layoutIE.visibility = View.VISIBLE
                 layoutTransfer.visibility = View.GONE
             }
-        }
-        rgType.setOnCheckedChangeListener { _, _ -> applyTypeUI() }
-        applyTypeUI()
-        if (rbExpense.isChecked) {
-            loadCategories(CategoryType.EXPENSE)
-        } else if (rbIncome.isChecked) {
-            loadCategories(CategoryType.INCOME)
         }
 
         // Date picker
@@ -184,28 +180,47 @@ class AddTransactionFragment : Fragment() {
             }
         }
 
+// 🔹 Initial setup (fixes the empty category issue)
+        applyTypeUI()
+        when {
+            rbIncome.isChecked -> loadCategories(CategoryType.INCOME)
+            rbExpense.isChecked -> loadCategories(CategoryType.EXPENSE)
+        }
+
         // Save
         btnSave.setOnClickListener {
             val desc = etDesc.text.toString().trim()
             val amount = etAmount.text.toString().toDoubleOrNull() ?: 0.0
-
             val txnType = when {
                 rbTransfer.isChecked -> TransactionType.TRANSFER
                 rbIncome.isChecked -> TransactionType.INCOME
                 else -> TransactionType.EXPENSE
             }
 
-            viewLifecycleOwner.lifecycleScope.launch {
+            lifecycleScope.launch {
                 if (txnId == -1L) {
                     val txn = buildTransaction(txnType, amount, desc)
-                    txnDao.insert(txn)
+                    txnManager.addTransaction(txn)
                     Toast.makeText(requireContext(), "Transaction added!", Toast.LENGTH_SHORT).show()
                 } else {
                     val updated = buildTransaction(txnType, amount, desc).copy(id = editingTxn!!.id)
-                    txnDao.update(updated)
+                    txnManager.updateTransaction(updated)   // ✅ now single argument
                     Toast.makeText(requireContext(), "Transaction updated!", Toast.LENGTH_SHORT).show()
                 }
                 parentFragmentManager.popBackStack()
+            }
+        }
+
+        // Show delete button only in edit mode
+        btnDelete.visibility = if (txnId == -1L) View.GONE else View.VISIBLE
+
+        btnDelete.setOnClickListener {
+            lifecycleScope.launch {
+                editingTxn?.let { txn ->
+                    txnManager.deleteTransaction(txn)
+                    Toast.makeText(requireContext(), "Transaction deleted", Toast.LENGTH_SHORT).show()
+                    requireActivity().onBackPressedDispatcher.onBackPressed()
+                }
             }
         }
     }

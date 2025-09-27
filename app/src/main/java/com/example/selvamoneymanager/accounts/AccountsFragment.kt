@@ -80,9 +80,9 @@ class AccountsFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             val accounts = dao.getAllAccounts()
             val balances = daoTx.getBalancesByAccount()
-            val balanceMap = balances.associateBy { it.accountId }
+            val balanceMap: Map<Long, AccountBalanceResult> = balances.associateBy { it.accountId.toLong() }
 
-            // Build AccountRowItems with currentBalance
+// Build AccountRowItems with currentBalance
             val accountItems = accounts.map { acc ->
                 val res: AccountBalanceResult? = balanceMap[acc.id]
 

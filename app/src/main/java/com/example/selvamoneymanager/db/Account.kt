@@ -16,7 +16,7 @@ import androidx.room.PrimaryKey
 )
 data class Account(
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    val id: Long = 0,
 
     // Keep the column name as `group` for compatibility, but quote it so Room always escapes it.
     @ColumnInfo(name = "group_name")

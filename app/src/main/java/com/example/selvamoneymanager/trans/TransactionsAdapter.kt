@@ -70,9 +70,14 @@ class TransactionsAdapter(
 
     class SectionVH(v: View) : RecyclerView.ViewHolder(v) {
         private val tv = v.findViewById<TextView>(R.id.tvSectionTitle)
-        fun bind(title: String) { tv.text = title }
-    }
 
+        fun bind(title: String) {
+            val today = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+                .format(Date())
+
+            tv.text = if (title == today) "Today" else title
+        }
+    }
     class MonthTotalVH(v: View) : RecyclerView.ViewHolder(v) {
         private val monthLabel = v.findViewById<TextView>(R.id.tvMonthLabel)
         private val totalView = v.findViewById<TextView>(R.id.tvMonthTotal)

@@ -111,7 +111,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Save"
-            android:layout_marginTop="20dp" />
+            android:layout_marginTop="30dp" />
+        <Button
+            android:id="@+id/btnDelete"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Delete"
+            android:backgroundTint="@android:color/holo_red_dark"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="12dp"/>
 
     </LinearLayout>
 </ScrollView>

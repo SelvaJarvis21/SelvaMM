@@ -22,9 +22,11 @@ interface AccountDao {
     suspend fun getAllAccounts(): List<Account>
 
     // Get account by ID
-    @Query("SELECT * FROM accounts WHERE id = :id LIMIT 1")
-    suspend fun getAccountById(id: Int): Account?
+//    @Query("SELECT * FROM accounts WHERE id = :id LIMIT 1")
+//    suspend fun getAccountById(id: Int): Account?
 
+    @Query("SELECT * FROM accounts WHERE id = :id LIMIT 1")
+    suspend fun getById(id: Long): Account?
     // Get accounts by group (Cash, Card, Savings, etc.)
     @Query("SELECT * FROM accounts WHERE group_name = :group ORDER BY name ASC")
     suspend fun getAccountsByGroup(group: String): List<Account>
