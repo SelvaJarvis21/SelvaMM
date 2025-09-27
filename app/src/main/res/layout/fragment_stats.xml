@@ -4,9 +4,10 @@
     android:orientation="vertical"
     android:padding="12dp"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?android:windowBackground">
 
-    <!-- Header row: prev/label/next on the left, timeline dropdown on the right -->
+    <!-- Header row -->
     <LinearLayout
         android:id="@+id/headerRow"
         android:layout_width="match_parent"
@@ -25,11 +26,12 @@
 
             <ImageButton
                 android:id="@+id/btnPrev"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
                 android:background="@android:color/transparent"
                 android:contentDescription="Previous"
-                android:src="@android:drawable/ic_media_previous" />
+                android:src="@android:drawable/ic_media_previous"
+                android:tint="@color/material_dynamic_neutral50" />
 
             <TextView
                 android:id="@+id/tvPeriod"
@@ -38,7 +40,8 @@
                 android:layout_marginHorizontal="8dp"
                 android:text="Aug 2025"
                 android:textStyle="bold"
-                android:textSize="18sp" />
+                android:textSize="18sp"
+                android:textColor="@color/material_dynamic_neutral50" />
 
             <ImageButton
                 android:id="@+id/btnNext"
@@ -46,25 +49,29 @@
                 android:layout_height="40dp"
                 android:background="@android:color/transparent"
                 android:contentDescription="Next"
-                android:src="@android:drawable/ic_media_next" />
+                android:src="@android:drawable/ic_media_next"
+                android:tint="@color/material_dynamic_neutral50"  />
         </LinearLayout>
 
-        <!-- Right: timeline dropdown (Monthly / Yearly) -->
+        <!-- Right: timeline dropdown -->
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tilTimeline"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-            android:layout_width="160dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            app:endIconMode="dropdown_menu">
+        android:id="@+id/tilTimeline"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        android:layout_width="160dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        app:endIconMode="dropdown_menu">
 
-            <com.google.android.material.textfield.MaterialAutoCompleteTextView
-                android:id="@+id/ddTimeline"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Timeline"
-                android:text="Monthly" />
-        </com.google.android.material.textfield.TextInputLayout>
+        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+            android:id="@+id/ddTimeline"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Timeline"
+            android:text="Monthly"
+            android:textColor="@color/material_dynamic_neutral50"
+            android:textColorHint="@color/text_secondary" />
+    </com.google.android.material.textfield.TextInputLayout>
+
     </LinearLayout>
 
     <!-- Type toggle: Income / Expense -->
@@ -82,7 +89,10 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:text="Income"
-            app:checkedIconEnabled="true" />
+            app:checkedIconEnabled="true"
+            app:chipBackgroundColor="@color/chip_income_selector"
+            android:textColor="@color/white"/>
+
 
         <com.google.android.material.chip.Chip
             android:id="@+id/chipExpense"
@@ -91,10 +101,12 @@
             android:layout_height="wrap_content"
             android:text="Expense"
             android:checked="true"
+            app:chipBackgroundColor="@color/chip_expense_selector"
+            android:textColor="@color/white"
             app:checkedIconEnabled="true" />
     </LinearLayout>
 
-    <!-- Total summary (Earned / Spent) -->
+    <!-- Total summary -->
     <TextView
         android:id="@+id/tvTotalSummary"
         android:layout_width="match_parent"
@@ -103,7 +115,8 @@
         android:textStyle="bold"
         android:textSize="16sp"
         android:paddingBottom="8dp"
-        android:text="" />
+        android:text=""
+        android:textColor="@color/white" />
 
     <!-- Pie chart -->
     <com.github.mikephil.charting.charts.PieChart
@@ -112,7 +125,7 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <!-- Selected category line (move this ABOVE the list) -->
+    <!-- Selected category -->
     <TextView
         android:id="@+id/tvSelectedCategory"
         android:layout_width="match_parent"
@@ -122,7 +135,8 @@
         android:textSize="15sp"
         android:textStyle="bold"
         android:gravity="center"
-        android:text="" />
+        android:text=""
+        android:textColor="@color/white" />
 
     <!-- Category totals list -->
     <androidx.recyclerview.widget.RecyclerView
@@ -130,6 +144,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
+        android:textColor="@color/white"
         android:paddingTop="8dp" />
 
 </LinearLayout>

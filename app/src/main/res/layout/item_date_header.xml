@@ -10,5 +10,5 @@
     android:text="26 Sep 2025"
     android:textSize="14sp"
     android:textStyle="bold"
-    android:textColor="#FFFFFF"
-    android:background="#2A2A2A" />
+    android:textColor="@color/white"
+    android:background="@color/teal_200" />

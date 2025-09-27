@@ -11,17 +11,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="01 Jan 2025 • ₹0.00"
-        android:textColor="#00BCD4"
+        android:textColor="@color/material_dynamic_neutral50"
         android:textStyle="bold"
-        android:textSize="20sp" />
+        android:textSize="16sp" />
 
     <TextView
         android:id="@+id/tvTop"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Category • Account"
-        android:textColor="#00BCD4"
-        android:textSize="18sp"
+        android:textColor="@color/material_dynamic_neutral50"
+        android:textSize="16sp"
         android:textStyle="bold" />
 
     <TextView
@@ -29,7 +29,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Description"
-        android:textColor="#00BCD4"
+        android:textColor="@color/material_dynamic_neutral50"
         android:textSize="16sp" />
 
 
