@@ -4,14 +4,16 @@ import androidx.room.*
 import com.example.selvamoneymanager.trans.CategoryTotal
 import com.example.selvamoneymanager.trans.TransactionRow
 
-
-
 @Dao
 interface TransactionDao {
 
-    // Insert transaction, return ID
+    // Insert single transaction
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(txn: Transaction): Long
+
+    // ✅ Insert multiple transactions at once (needed for restore)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(transactions: List<Transaction>)
 
     // Update transaction
     @Update
@@ -20,6 +22,10 @@ interface TransactionDao {
     // Delete transaction
     @Delete
     suspend fun delete(txn: Transaction)
+
+    // ✅ Plain getAll for backup/export
+    @Query("SELECT * FROM transactions")
+    suspend fun getAll(): List<Transaction>
 
     // Get all rows within a date range (with joins)
     @Query("""
@@ -46,7 +52,7 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE id = :txnId LIMIT 1")
     suspend fun getById(txnId: Long): Transaction?
 
-    // Get all rows (latest first)
+    // Get all rows (latest first, with joins)
     @Query("""
         SELECT 
           t.id, t.type, t.dateMillis, t.amount, 
@@ -64,7 +70,7 @@ interface TransactionDao {
     """)
     suspend fun getAllRows(): List<TransactionRow>
 
-    // ✅ Get totals grouped by category (now includes categoryId)
+    // ✅ Totals grouped by category
     @Query("""
         SELECT 
           t.categoryId AS categoryId,
@@ -100,8 +106,7 @@ interface TransactionDao {
     @Query("SELECT COUNT(*) FROM transactions WHERE categoryId = :catId")
     suspend fun countByCategory(catId: Int): Int
 
-    // ✅ Per-account totals including transfers (assumes types: 'income' | 'expense' | 'transfer')
-    // If your Account.id is Long, change all Int to Long here.
+    // ✅ Per-account totals including transfers
     @Query("""
     SELECT
       a.id AS accountId,
@@ -127,7 +132,7 @@ interface TransactionDao {
       ), 0) AS transferOut
     FROM accounts a
     ORDER BY a.id
-""")
+    """)
     suspend fun getBalancesByAccount(): List<AccountBalanceResult>
 
     // (Optional) debug helpers
@@ -136,6 +141,4 @@ interface TransactionDao {
 
     @Query("SELECT COUNT(*) FROM transactions WHERE type = 'transfer'")
     suspend fun countTransfers(): Int
-
-
 }

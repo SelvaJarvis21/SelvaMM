@@ -1,50 +1,70 @@
 package com.example.selvamoneymanager.util
 
 import android.content.Context
-import android.util.Log
+import android.os.Environment
+import com.example.selvamoneymanager.db.AppDatabase
+import com.example.selvamoneymanager.db.Account
+import com.example.selvamoneymanager.db.CategoryEntity
+import com.example.selvamoneymanager.db.Transaction
+import com.google.gson.Gson
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
-fun backupDatabase(context: Context): Boolean {
-    return try {
-        val dbName = "selva_db"
-        val dbPath = context.getDatabasePath(dbName) // ✅ actual database in /databases
+// Data wrapper for backup
+data class BackupData(
+    val accounts: List<Account>,
+    val categories: List<CategoryEntity>,
+    val transactions: List<Transaction>
+)
 
-        if (!dbPath.exists()) {
-            Log.e("BackupUtils", "Database not found at ${dbPath.absolutePath}")
-            return false
+object BackupUtil {
+
+    // EXPORT → create backup file in Downloads
+    suspend fun exportBackup(context: Context): File? = withContext(Dispatchers.IO) {
+        try {
+            val db = AppDatabase.getDatabase(context)
+
+            val accounts = db.accountDao().getAll()
+            val categories = db.categoryDao().getAll()
+            val transactions = db.transactionDao().getAll()
+
+            val backupData = BackupData(accounts, categories, transactions)
+            val json = Gson().toJson(backupData)
+
+            // 📂 Save to Downloads folder
+            val downloadsDir =
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+            if (!downloadsDir.exists()) downloadsDir.mkdirs()
+
+            val fileName = "selva_backup_${System.currentTimeMillis()}.mmbak"
+            val backupFile = File(downloadsDir, fileName)
+            backupFile.writeText(json)
+
+            backupFile
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
-
-        val backupDir = File(context.getExternalFilesDir(null), "backup")
-        if (!backupDir.exists()) backupDir.mkdirs()
-
-        val backupFile = File(backupDir, dbName)
-        dbPath.copyTo(backupFile, overwrite = true)
-
-        Log.i("BackupUtils", "Backup saved at ${backupFile.absolutePath}, size=${backupFile.length()}")
-        true
-    } catch (e: Exception) {
-        e.printStackTrace()
-        false
     }
-}
 
-fun restoreDatabase(context: Context): Boolean {
-    return try {
-        val dbName = "selva_db"
-        val dbPath = context.getDatabasePath(dbName) // ✅ actual database path
+    // IMPORT → restore data into DB
+    suspend fun importBackup(context: Context, file: File): Boolean = withContext(Dispatchers.IO) {
+        return@withContext try {
+            val json = file.readText()
+            val backupData = Gson().fromJson(json, BackupData::class.java)
 
-        val backupFile = File(context.getExternalFilesDir(null), "backup/$dbName")
-        if (!backupFile.exists()) {
-            Log.e("BackupUtils", "Backup not found at ${backupFile.absolutePath}")
-            return false
+            val db = AppDatabase.getDatabase(context)
+            db.clearAllTables()
+
+            db.accountDao().insertAll(backupData.accounts)
+            db.categoryDao().insertAll(backupData.categories)
+            db.transactionDao().insertAll(backupData.transactions)
+
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
         }
-
-        backupFile.copyTo(dbPath, overwrite = true)
-
-        Log.i("BackupUtils", "Database restored from ${backupFile.absolutePath}, size=${backupFile.length()}")
-        true
-    } catch (e: Exception) {
-        e.printStackTrace()
-        false
     }
 }

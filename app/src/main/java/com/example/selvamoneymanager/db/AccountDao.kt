@@ -5,9 +5,13 @@ import androidx.room.*
 @Dao
 interface AccountDao {
 
-    // Insert account and return its ID
+    // Insert single account and return its ID
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(account: Account): Long
+
+    // Insert multiple accounts at once
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAll(accounts: List<Account>)
 
     // Update account fields (e.g., name, balance)
     @Update
@@ -21,12 +25,14 @@ interface AccountDao {
     @Query("SELECT * FROM accounts ORDER BY name ASC")
     suspend fun getAllAccounts(): List<Account>
 
-    // Get account by ID
-//    @Query("SELECT * FROM accounts WHERE id = :id LIMIT 1")
-//    suspend fun getAccountById(id: Int): Account?
+    // Alias for backup/restore (same as getAllAccounts)
+    @Query("SELECT * FROM accounts")
+    suspend fun getAll(): List<Account>
 
+    // Get account by ID
     @Query("SELECT * FROM accounts WHERE id = :id LIMIT 1")
     suspend fun getById(id: Long): Account?
+
     // Get accounts by group (Cash, Card, Savings, etc.)
     @Query("SELECT * FROM accounts WHERE group_name = :group ORDER BY name ASC")
     suspend fun getAccountsByGroup(group: String): List<Account>
