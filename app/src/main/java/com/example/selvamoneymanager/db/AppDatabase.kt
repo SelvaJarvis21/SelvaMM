@@ -53,8 +53,7 @@ abstract class AppDatabase : RoomDatabase() {
                         override fun onCreate(db: SupportSQLiteDatabase) {
                             super.onCreate(db)
 
-                            // Insert default categories on first DB creation
-                            Executors.newSingleThreadExecutor().execute {
+                            CoroutineScope(Dispatchers.IO).launch {
                                 val defaults = listOf(
                                     CategoryEntity(name = "Salary", type = CategoryType.INCOME),
                                     CategoryEntity(name = "Freelance/Side Hustle", type = CategoryType.INCOME),
@@ -71,13 +70,11 @@ abstract class AppDatabase : RoomDatabase() {
                                     CategoryEntity(name = "Health & Fitness", type = CategoryType.EXPENSE),
                                     CategoryEntity(name = "Other Expenses", type = CategoryType.EXPENSE)
                                 )
-
-                                CoroutineScope(Dispatchers.IO).launch {
-                                    getDatabase(context).categoryDao().insertAll(defaults)
-                                }
+                                getDatabase(context).categoryDao().insertAll(defaults)
                             }
                         }
                     })
+
                     .build()
                 INSTANCE = instance
                 instance
