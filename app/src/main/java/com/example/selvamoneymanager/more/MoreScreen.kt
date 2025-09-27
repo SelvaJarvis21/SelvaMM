@@ -14,17 +14,21 @@ import com.example.selvamoneymanager.ui.theme.SelvaMoneyManagerTheme
 @Composable
 fun MoreScreenWrapper(
     onOpenIncome: () -> Unit,
-    onOpenExpense: () -> Unit
+    onOpenExpense: () -> Unit,
+    onBackup: () -> Unit,
+    onRestore: () -> Unit
 ) {
     SelvaMoneyManagerTheme {
-        MoreScreen(onOpenIncome, onOpenExpense)
+        MoreScreen(onOpenIncome, onOpenExpense, onBackup, onRestore)
     }
 }
 
 @Composable
 fun MoreScreen(
     onOpenIncome: () -> Unit,
-    onOpenExpense: () -> Unit
+    onOpenExpense: () -> Unit,
+    onBackup: () -> Unit,
+    onRestore: () -> Unit
 ) {
     Scaffold { inner ->
         Column(Modifier.padding(inner).padding(16.dp)) {
@@ -36,6 +40,16 @@ fun MoreScreen(
             Spacer(Modifier.height(12.dp))
             Button(onClick = onOpenExpense, modifier = Modifier.fillMaxWidth()) {
                 Text("Expense Category")
+            }
+            Spacer(Modifier.height(24.dp))
+
+            // Backup & Restore buttons
+            Button(onClick = onBackup, modifier = Modifier.fillMaxWidth()) {
+                Text("Backup Database")
+            }
+            Spacer(Modifier.height(12.dp))
+            Button(onClick = onRestore, modifier = Modifier.fillMaxWidth()) {
+                Text("Restore Database")
             }
         }
     }
