@@ -175,6 +175,16 @@ class TransactionsFragment : Fragment() {
 
         var total = 0.0
 
+        rows.forEach { total += it.amount }
+
+        items.add(
+            TxnListItem.MonthTotal(
+                currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())),
+                total
+            )
+        )
+
+
         rows.groupBy {
             Instant.ofEpochMilli(it.dateMillis)
                 .atZone(ZoneId.systemDefault())
@@ -189,12 +199,7 @@ class TransactionsFragment : Fragment() {
                 }
             }
 
-        items.add(
-            TxnListItem.MonthTotal(
-                currentMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy", Locale.getDefault())),
-                total
-            )
-        )
+
         return items
     }
 

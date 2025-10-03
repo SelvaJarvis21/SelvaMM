@@ -2,19 +2,24 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:padding="12dp"
-    android:background="@android:color/darker_gray">
-
+    android:gravity="center_vertical"
+    android:background="@android:color/transparent">
+    <!-- Month label (left) -->
     <TextView
         android:id="@+id/tvMonthLabel"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:text="September 2025"
         android:textStyle="bold"
-        android:textSize="16sp"
-        android:paddingBottom="4dp" />
+        android:textSize="18sp"
+        android:textColor="@color/material_dynamic_neutral50"
+        android:ellipsize="end"
+        android:singleLine="true" />
 
+    <!-- Month total (right, teal or red/green in code) -->
     <TextView
         android:id="@+id/tvMonthTotal"
         android:layout_width="wrap_content"
@@ -22,5 +27,5 @@
         android:text="₹10,000.00"
         android:textStyle="bold"
         android:textSize="18sp"
-        android:textColor="@android:color/holo_blue_dark" />
+        android:textColor="@color/teal_200" />
 </LinearLayout>
