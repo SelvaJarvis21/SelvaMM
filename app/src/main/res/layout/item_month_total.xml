@@ -3,9 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="12dp"
-    android:gravity="center_vertical"
-    android:background="@android:color/transparent">
+    style="@style/BaseRow"
+    android:gravity="center_vertical">
     <!-- Month label (left) -->
     <TextView
         android:id="@+id/tvMonthLabel"

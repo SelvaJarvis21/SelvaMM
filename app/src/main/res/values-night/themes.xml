@@ -1,14 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <style name="Theme.SelvaMoneyManager" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+
+        <!-- Primary brand colors -->
         <item name="colorPrimary">@color/purple_500</item>
         <item name="colorPrimaryDark">@color/purple_700</item>
         <item name="colorAccent">@color/teal_200</item>
 
-        <!-- Dark mode background -->
+        <!-- Material color roles -->
+        <item name="colorOnBackground">@color/md_theme_dark_onBackground</item>
+        <item name="colorOnSurface">@color/md_theme_dark_onSurface</item>
+        <item name="colorOnSurfaceVariant">@color/md_theme_dark_onSurfaceVariant</item>
+        <item name="colorOutline">@color/md_theme_dark_outline</item>
+
+        <!-- Dark background -->
         <item name="android:windowBackground">@color/background_dark</item>
 
-        <!-- Activated color (chips, switches, etc.) -->
+        <!-- Activated / accent elements (chips, switches, etc.) -->
         <item name="colorControlActivated">@color/teal_200</item>
+
     </style>
+
 </resources>

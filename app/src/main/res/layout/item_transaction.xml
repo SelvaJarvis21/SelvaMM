@@ -1,59 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/BaseRow"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:padding="12dp"
-    android:gravity="center_vertical"
-    android:background="@android:color/transparent">
+    android:gravity="center_vertical">
 
-    <!-- Category (left) -->
+    <!-- Category (bold) -->
     <TextView
         android:id="@+id/tvCategory"
+        style="@style/Text.Category"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Category"
-        android:textColor="@color/material_dynamic_neutral50"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:ellipsize="end"
-        android:singleLine="true"
-        android:layout_marginEnd="4dp" />
+        android:layout_marginEnd="6dp"
+        android:text="Category" />
 
-    <!-- Account (left, next to Category) -->
+    <!-- Account (lighter text beside Category) -->
     <TextView
         android:id="@+id/tvAccount"
+        style="@style/Text.Secondary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="(Account)"
-        android:textColor="@color/material_dynamic_neutral50"
-        android:textSize="12sp"
-        android:ellipsize="end"
-        android:singleLine="true"
-        android:layout_marginEnd="8dp" />
+        android:layout_marginEnd="8dp"
+        android:text="(Account)" />
 
-    <!-- Description (middle, expands) -->
+    <!-- Description (expands in center) -->
     <TextView
         android:id="@+id/tvDesc"
+        style="@style/Text.Secondary"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="Description"
-        android:textColor="@color/material_dynamic_neutral50"
-        android:textSize="12sp"
-        android:ellipsize="end"
-        android:singleLine="true"
-        android:layout_marginEnd="8dp" />
+        android:layout_marginEnd="8dp"
+        android:text="Description" />
 
-    <!-- Amount only (right aligned, sticks to end) -->
+    <!-- Amount (right aligned) -->
     <TextView
         android:id="@+id/tvAmount"
+        style="@style/Text.Amount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="₹0.00"
-        android:textColor="@color/material_dynamic_neutral50"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:gravity="end" />
-
+        android:gravity="end"
+        android:text="₹0.00" />
 </LinearLayout>

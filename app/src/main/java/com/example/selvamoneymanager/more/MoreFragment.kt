@@ -20,6 +20,9 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import com.example.selvamoneymanager.util.CsvImportUtil
 import com.example.selvamoneymanager.util.CsvImportResult
+import androidx.compose.ui.platform.LocalContext
+import com.example.selvamoneymanager.util.ThemePreference
+import androidx.compose.runtime.collectAsState
 
 
 class MoreFragment : Fragment() {
@@ -50,7 +53,10 @@ class MoreFragment : Fragment() {
     ): View {
         return ComposeView(requireContext()).apply {
             setContent {
-                SelvaMoneyManagerTheme {
+                val context = LocalContext.current
+                val isDarkMode = ThemePreference.getThemeMode(context).collectAsState(initial = false)
+
+                SelvaMoneyManagerTheme(darkTheme = isDarkMode.value) {
                     MoreScreen(
                         onOpenIncome = {
                             parentFragmentManager.beginTransaction()
@@ -81,16 +87,15 @@ class MoreFragment : Fragment() {
                             }
                         },
                         onRestore = {
-                            // Launch file picker for ".mmbak"
                             restoreFilePicker.launch("*/*")
                         },
                         onImportCsv = {
-                            // open a file picker for CSV
-                            csvPicker.launch("text/*") // or "text/csv" (some OEMs are picky)
+                            csvPicker.launch("text/*")
                         }
                     )
                 }
             }
+
         }
     }
     // File picker launcher for restore
