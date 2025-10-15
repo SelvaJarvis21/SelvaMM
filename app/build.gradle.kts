@@ -18,14 +18,14 @@ android {
     }
 
     namespace = "com.example.selvamoneymanager"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.selvianmm.moneymanager"
-        minSdk = 21
-        targetSdk = 34
-        versionCode = 40000
-        versionName = "4.0.0"
+        minSdk = 24
+        targetSdk = 35
+        versionCode = 40001
+        versionName = "4.0.1"
     }
 
     signingConfigs {
@@ -62,6 +62,10 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 dependencies {
