@@ -19,3 +19,17 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Room
+-keep class androidx.room.** { *; }
+-dontwarn androidx.room.**
+-keep class * extends androidx.room.RoomDatabase
+-keep class com.example.selvamoneymanager.db.** { *; }
+
+# Kotlin coroutines & metadata
+-keepclassmembers class kotlinx.** { *; }
+-dontwarn kotlinx.coroutines.**
+-keepattributes *Annotation*, InnerClasses, EnclosingMethod, Signature
+
+# Models used via reflection (if any CSV/JSON parsers)
+-keepclassmembers class com.example.selvamoneymanager.** { *; }
