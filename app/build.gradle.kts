@@ -24,8 +24,8 @@ android {
         applicationId = "com.selvianmm.moneymanager"
         minSdk = 24
         targetSdk = 35
-        versionCode = 40001
-        versionName = "4.0.1"
+        versionCode = 40002
+        versionName = "4.0.2"
     }
 
     signingConfigs {
